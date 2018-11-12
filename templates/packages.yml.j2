@@ -1,0 +1,16 @@
+{% set ns = namespace(found=false) %}
+{% for distro in packages_dict.keys() %}
+{% if distro | lower == ansible_facts.distribution | lower %}
+{% for release in packages_dict[distro] %}
+{% if release | string | lower == ansible_facts.distribution_major_version | string | lower %}
+{% for package in packages_dict[distro][release] %}
+{% set ns.found = true %}
+{{ package }}: {{ packages_dict[distro][release][package] }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% if not ns.found %}
+{}
+{% endif %}

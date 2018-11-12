@@ -1,2 +1,43 @@
 ---
 # Role default lower priority variables
+
+# Dictionary with the operating system packages to manage for each distribution
+# name/major release combination. The structure of the dict is the following:
+#
+# {
+#   <distribution name 1>:
+#     <distribution 1 major release 1>:
+#       <package name 1>: <sstate (as expected by ansible package module)>
+#       <package name 2>: <state>
+#       <package name N>: <state>
+#     <distribution 1 major release 2>:
+#       <package name 1>: <state>
+#       <package name 2>: <state>
+#       <package name N>: <state>
+#     <distribution 1 major release N>:
+#       <package name 1>: <state>
+#       <package name 2>: <state>
+#       <package name N>: <state>
+#
+#   <distribution name 2>:
+#     <distribution 2 major release 1>:
+#       <package name 1>: <state>
+#       <package name 2>: <state>
+#       <package name N>: <state>
+#     <distribution 2 major release 2>:
+#       <package name 1>: <state>
+#       <package name 2>: <state>
+#       <package name N>: <state>
+#     <distribution 2 major release N>:
+#       <package name 1>: <state>
+#       <package name 2>: <state>
+#       <package name N>: <state>
+# }
+
+packages_os:
+
+# Dictionary with the python packages to manage for each distribution name/major
+# release combination. The structure of the dict is the same that for the
+# variable `packages_os`
+
+packages_python:
