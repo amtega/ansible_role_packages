@@ -11,14 +11,17 @@ galaxy_info:
   license: GPLv3 or EUPL
   min_ansible_version: 2.7
   platforms:
-  - name: Fedora
-    versions:
-      - 27
-      - 28
-  - name: EL
-    versions:
-      - 6
-      - 7
+    - name: Debian
+      versions:
+        - stretch
+    - name: EL
+      versions:
+        - 6
+        - 7
+    - name: Fedora
+      versions:
+        - 27
+        - 28
   galaxy_tags:
     - system
     - packages
@@ -31,6 +34,7 @@ dependencies:
   - role: amtega.check_platform
     check_platform_distributions:
       centos: 6
+      debian: 9
       fedora: 27
       rhel: 6
 
