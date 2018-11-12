@@ -1,2 +1,34 @@
 ---
 # Role tasks
+
+- block:
+    - name: install operating system packages
+      package:
+        name: "{{ package.key }}"
+        state: "{{ package.value }}"
+      loop: >-
+        {{ lookup('template', 'packages.yml.j2')
+           | from_yaml
+           | combine(
+              (packages_python is not none)
+              | ternary({'python-pip': 'present'}, {}))
+           | dict2items }}
+      loop_control:
+        loop_var: package
+        label: "{{ package.key }}"
+      vars:
+        packages_dict: "{{ packages_os }}"
+
+    - name: install python packages
+      pip:
+        name: "{{ package.key }}"
+        state: "{{ package.value }}"
+      loop: >-
+        {{ lookup('template', 'packages.yml.j2') | from_yaml | dict2items }}
+      loop_control:
+        loop_var: package
+        label: "{{ package.key }}"
+      vars:
+        packages_dict: "{{ packages_python }}"
+  tags:
+    - role::packages

@@ -1,2 +1,55 @@
 ---
 # Tasks for testing role
+
+- name: run idempotence test
+  hosts: localhost
+  roles:
+    - role: amtega.docker_presets
+      docker_presets_images_json_query: >-
+        [? starts_with(name, `centos-6`)
+           || starts_with(name, `centos-7`)
+           || starts_with(name, `fedora-27`)
+           || starts_with(name, `fedora-28`) ]
+
+    - role: amtega.docker_sandbox
+      docker_sandbox_state: started
+  tags:
+    - sandbox
+
+- name: test packages role
+  hosts: docker_sandbox_containers
+  roles:
+    - role: amtega.packages
+      packages_os:
+        centos:
+          6:
+            httpd: present
+          7:
+            httpd: present
+            tomcat: present
+        fedora:
+          27:
+            httpd: present
+            tomcat: present
+          28:
+            httpd: present
+            tomcat: present
+      packages_python:
+        centos:
+          6:
+            "pexpect>=3.3": present
+          7:
+            "pexpect>=3.3": present
+        fedora:
+          27:
+            "pexpect>=3.3": present
+          28:
+            "pexpect>=3.3": present
+  tags:
+    - idempotence
+
+- name: cleanup docker docker sandbox
+  hosts: localhost
+  roles:
+    - role: amtega.docker_sandbox
+      docker_sandbox_state: absent
