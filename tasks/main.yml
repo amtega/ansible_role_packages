@@ -23,6 +23,7 @@
       pip:
         name: "{{ package.key }}"
         state: "{{ package.value }}"
+        extra_args: "{{ packages_pip_extra_args }}"
       loop: >-
         {{ lookup('template', 'packages.yml.j2') | from_yaml | dict2items }}
       loop_control:
@@ -30,5 +31,6 @@
         label: "{{ package.key }}"
       vars:
         packages_dict: "{{ packages_python }}"
+  environment: "{{ proxy_client_environment }}"
   tags:
     - role::packages

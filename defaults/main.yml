@@ -44,3 +44,9 @@ packages_os:
 # variable `packages_os`
 
 packages_python:
+
+#
+# Extra arguments for the python pip tool to install packages
+#
+
+packages_pip_extra_args: "--upgrade"
