@@ -33,6 +33,9 @@
 #       <package name 2>: <state>
 #       <package name N>: <state>
 # }
+#
+# In the previous dictionary you can replace distribion name/major release by
+# the `all` keyword to apply that config to all distributions/releases.
 
 packages_os:
 

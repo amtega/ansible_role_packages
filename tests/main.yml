@@ -21,7 +21,12 @@
   roles:
     - role: amtega.packages
       packages_os:
+        all:
+          all:
+            lynx: present
         centos:
+          all:
+            telnet: present
           6:
             httpd: present
           7:
