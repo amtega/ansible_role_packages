@@ -4,16 +4,17 @@
 - block:
     - name: install operating system packages
       package:
-        name: "{{ package.keys() | first }}"
-        state: "{{ package.values() | first }}"
+        name: "{{ package.name }}"
+        state: "{{ package.state }}"
       loop: >-
         {{ lookup('template', 'packages.yml.j2') | from_yaml
            + (packages_python is not none)
-              | ternary([{'python-pip': 'present'},
-                         {'python-setuptools': 'present'} ], []) }}
+              | ternary([{ 'name': 'python-pip', 'state': 'present'},
+                         { 'name': 'python-setuptools', 'state': 'present'} ],
+                        []) }}
       loop_control:
         loop_var: package
-        label: "{{ package.keys() | first }}"
+        label: "{{ package.name }}"
       vars:
         packages_spec: "{{ packages_os }}"
       tags:
@@ -22,14 +23,16 @@
 
     - name: install python packages
       pip:
-        name: "{{ package.keys() | first }}"
-        state: "{{ package.values() | first }}"
-        extra_args: "{{ packages_pip_extra_args }}"
+        name: "{{ package.name }}"
+        state: "{{ package.state }}"
+        extra_args: >-
+          {{ packages_pip_extra_args }}
+          {{ package.pip_extra_args | default('') }}
       loop: >-
         {{ lookup('template', 'packages.yml.j2') | from_yaml }}
       loop_control:
         loop_var: package
-        label: "{{ package.keys() | first }}"
+        label: "{{ package.name }}"
       vars:
         packages_spec: "{{ packages_python }}"
       tags:
