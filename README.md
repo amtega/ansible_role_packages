@@ -33,12 +33,18 @@ This is an example playbook:
   roles:
     - role: amtega.packages
       packages_os:
+        all:
+          all:
+            lynx: present
         centos:
+          all:
+            telnet: present
           6:
             httpd: present
           7:
-            httpd: present
-            tomcat: present
+            - name: "{{ package_name }}"
+              state: present
+            - tomcat: present
         fedora:
           27:
             httpd: present
@@ -47,9 +53,13 @@ This is an example playbook:
             httpd: present
             tomcat: present
       packages_python:
+        debian:
+          9:
+            "pexpect>=3.3": present
         centos:
           6:
-            "pexpect>=3.3": present
+            - "pexpect>=3.3": present
+            - "gitlab": present
           7:
             "pexpect>=3.3": present
         fedora:
@@ -57,6 +67,8 @@ This is an example playbook:
             "pexpect>=3.3": present
           28:
             "pexpect>=3.3": present
+  vars:
+    package_name: "httpd"
 ```
 
 ## Testing

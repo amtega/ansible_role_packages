@@ -4,33 +4,37 @@
 - block:
     - name: install operating system packages
       package:
-        name: "{{ package.key }}"
-        state: "{{ package.value }}"
+        name: "{{ package.keys() | first }}"
+        state: "{{ package.values() | first }}"
       loop: >-
-        {{ lookup('template', 'packages.yml.j2')
-           | from_yaml
-           | combine(
-              (packages_python is not none)
-              | ternary({'python-pip': 'present'}, {}))
-           | dict2items }}
+        {{ lookup('template', 'packages.yml.j2') | from_yaml
+           + (packages_python is not none)
+              | ternary([{'python-pip': 'present'},
+                         {'python-setuptools': 'present'} ], []) }}
       loop_control:
         loop_var: package
-        label: "{{ package.key }}"
+        label: "{{ package.keys() | first }}"
       vars:
-        packages_dict: "{{ packages_os }}"
+        packages_spec: "{{ packages_os }}"
+      tags:
+        - role::packages
+        - role::packages::os
 
     - name: install python packages
       pip:
-        name: "{{ package.key }}"
-        state: "{{ package.value }}"
+        name: "{{ package.keys() | first }}"
+        state: "{{ package.values() | first }}"
         extra_args: "{{ packages_pip_extra_args }}"
       loop: >-
-        {{ lookup('template', 'packages.yml.j2') | from_yaml | dict2items }}
+        {{ lookup('template', 'packages.yml.j2') | from_yaml }}
       loop_control:
         loop_var: package
-        label: "{{ package.key }}"
+        label: "{{ package.keys() | first }}"
       vars:
-        packages_dict: "{{ packages_python }}"
+        packages_spec: "{{ packages_python }}"
+      tags:
+        - role::packages
+        - role::packages::python
   environment: "{{ proxy_client_environment }}"
   tags:
     - role::packages

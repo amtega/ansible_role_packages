@@ -1,15 +1,27 @@
 {% set ns = namespace(found=false) %}
-{% if packages_dict is not none %}
-{% for distro in packages_dict.keys() %}
+{% if packages_spec is not none %}
+{% for distro in packages_spec.keys() %}
 {% if distro | lower == ansible_facts.distribution | lower
       or distro | lower == "all" %}
-{% for release in packages_dict[distro] %}
-{% if release | string | lower == ansible_facts.distribution_major_version | string | lower
+{% for release in packages_spec[distro] %}
+{% if release | string | lower == ansible_facts.distribution_major_version
+                                  | string
+                                  | lower
       or release | string | lower == "all" %}
-{% for package in packages_dict[distro][release] %}
+
+{% if packages_spec[distro][release] is iterable
+      and packages_spec[distro][release] is not string
+      and packages_spec[distro][release] is not mapping  %}
+{% for package in packages_spec[distro][release] %}
 {% set ns.found = true %}
-{{ package }}: {{ packages_dict[distro][release][package] }}
+- {{ package.name | default(package.keys() | first) }}: {{ package.state | default(package.values() | first) }}
 {% endfor %}
+{% else %}
+{% for package in packages_spec[distro][release] %}
+{% set ns.found = true %}
+- {{ package }}: {{ packages_spec[distro][release][package] }}
+{% endfor %}
+{% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}

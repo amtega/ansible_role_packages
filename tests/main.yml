@@ -31,8 +31,9 @@
           6:
             httpd: present
           7:
-            httpd: present
-            tomcat: present
+            - name: "{{ package_name }}"
+              state: present
+            - tomcat: present
         fedora:
           27:
             httpd: present
@@ -46,7 +47,8 @@
             "pexpect>=3.3": present
         centos:
           6:
-            "pexpect>=3.3": present
+            - "pexpect>=3.3": present
+            - "gitlab": present
           7:
             "pexpect>=3.3": present
         fedora:
@@ -54,6 +56,8 @@
             "pexpect>=3.3": present
           28:
             "pexpect>=3.3": present
+  vars:
+    package_name: "httpd"
   tags:
     - idempotence
 
