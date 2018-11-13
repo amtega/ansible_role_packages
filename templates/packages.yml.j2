@@ -14,12 +14,17 @@
       and packages_spec[distro][release] is not mapping  %}
 {% for package in packages_spec[distro][release] %}
 {% set ns.found = true %}
-- {{ package.name | default(package.keys() | first) }}: {{ package.state | default(package.values() | first) }}
+- name: {{ package.name | default(package.keys() | first) }}
+  state: {{ package.state | default(package.values() | first) }}
+{% if package.pip_extra_args is defined %}
+  pip_extra_args: "{{ package.pip_extra_args }}"
+{% endif %}
 {% endfor %}
 {% else %}
 {% for package in packages_spec[distro][release] %}
 {% set ns.found = true %}
-- {{ package }}: {{ packages_spec[distro][release][package] }}
+- name: {{ package }}
+  state: {{ packages_spec[distro][release][package] }}
 {% endfor %}
 {% endif %}
 {% endif %}
@@ -28,5 +33,5 @@
 {% endfor %}
 {% endif %}
 {% if not ns.found %}
-{}
+[]
 {% endif %}
