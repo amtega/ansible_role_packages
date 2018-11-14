@@ -39,7 +39,7 @@ dependencies:
       rhel: 6
 
   - role: amtega.proxy_client
-    proxy_client_permanent: false
+    proxy_client_permanent: no
 
   - role: amtega.epel
     when:
