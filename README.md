@@ -19,7 +19,7 @@ The role provides these modules:
 ## Dependencies
 
 - [amtega.check_platform](https://galaxy.ansible.com/amtega/check_platform)
-- [amtega.proxy_client](https://galaxy.ansible.com/amtega/proxy_client). If you need internet access to download packages fill this role variables.
+- [amtega.proxy_client](https://galaxy.ansible.com/amtega/proxy_client). If you need a proxy for internet access fill this role variables.
 - [amtega.epel](https://galaxy.ansible.com/amtega/epel). If distribution is CentOS or RHEL.
 
 ## Example Playbook
