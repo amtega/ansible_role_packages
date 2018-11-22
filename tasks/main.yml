@@ -2,6 +2,24 @@
 # Role tasks
 
 - block:
+    # Python packages can be installed in user home directory using `--user`
+    # argument and without root privileged. So here we check the existence of
+    # the python required tools to avoid calling the ansible `package` module if
+    # not necessary, as this module always require root privileges even though
+    # the packages are already installed
+
+    - name: check python pip tool
+      shell: pip --version
+      failed_when: false
+      changed_when: false
+      register: packages_check_pip
+
+    - name: check python setup tools
+      shell: easy_install --version
+      failed_when: false
+      changed_when: false
+      register: packages_check_setup_tools
+
     - name: install operating system packages
       package:
         name: "{{ package.name }}"
@@ -9,13 +27,23 @@
       loop: >-
         {{ lookup('template', 'packages.yml.j2') | from_yaml
            + (packages_python is not none)
-              | ternary([{ 'name': 'python-pip', 'state': 'present'},
-                         { 'name': 'python-setuptools', 'state': 'present'} ],
-                        []) }}
+              | ternary(python_extra_packages, []) }}
       loop_control:
         loop_var: package
         label: "{{ package.name }}"
       vars:
+        python_pip_packages:
+          - name: python-pip
+            state: present
+        python_setup_tools_packages:
+          - name: python-pip
+            state: present
+        python_extra_packages: >-
+          {{ (packages_check_pip.rc !=0)
+             | ternary(python_pip_packages, [])
+             + (packages_check_setup_tools.rc !=0)
+               | ternary(python_setup_tools_packages, []) }}
+
         packages_spec: "{{ packages_os }}"
       tags:
         - role::packages
