@@ -9,13 +9,13 @@
     # the packages are already installed
 
     - name: check python pip tool
-      shell: pip --version
+      command: pip --version
       failed_when: false
       changed_when: false
       register: packages_check_pip
 
     - name: check python setup tools
-      shell: easy_install --version
+      command: easy_install --version
       failed_when: false
       changed_when: false
       register: packages_check_setup_tools
