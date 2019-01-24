@@ -20,7 +20,7 @@
       changed_when: false
       register: packages_check_setup_tools
 
-    - name: install operating system packages
+    - name: setup operating system packages
       package:
         name: "{{ package.name }}"
         state: "{{ package.state }}"
@@ -30,7 +30,7 @@
               | ternary(python_extra_packages, []) }}
       loop_control:
         loop_var: package
-        label: "{{ package.name }}"
+        label: "{{ package.name }} {{ package.state }}"
       vars:
         python_pip_packages:
           - name: python-pip
@@ -49,7 +49,7 @@
         - role::packages
         - role::packages::os
 
-    - name: install python packages
+    - name: setup python packages
       pip:
         name: "{{ package.name }}"
         state: "{{ package.state }}"
@@ -60,7 +60,7 @@
         {{ lookup('template', 'packages.yml.j2') | from_yaml }}
       loop_control:
         loop_var: package
-        label: "{{ package.name }}"
+        label: "{{ package.name }} {{ package.state }}"
       vars:
         packages_spec: "{{ packages_python }}"
       tags:
