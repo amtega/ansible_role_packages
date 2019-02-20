@@ -36,12 +36,12 @@
           - name: python-pip
             state: present
         python_setup_tools_packages:
-          - name: python-pip
+          - name: python-setuptools
             state: present
         python_extra_packages: >-
-          {{ (packages_check_pip.rc !=0)
+          {{ (packages_check_pip.rc != 0)
              | ternary(python_pip_packages, [])
-             + (packages_check_setup_tools.rc !=0)
+             + (packages_check_setup_tools.rc != 0)
                | ternary(python_setup_tools_packages, []) }}
 
         packages_spec: "{{ packages_os }}"
