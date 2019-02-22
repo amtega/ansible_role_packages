@@ -1,6 +1,6 @@
 {% set ns = namespace(found=false) %}
 {% if packages_spec is not none %}
-{% for distro in packages_spec.keys() %}
+{% for distro in packages_spec.keys() | list %}
 {% if distro | lower == ansible_facts.distribution | lower
       or distro | lower == "all" %}
 {% for release in packages_spec[distro] %}
@@ -14,8 +14,8 @@
       and packages_spec[distro][release] is not mapping  %}
 {% for package in packages_spec[distro][release] %}
 {% set ns.found = true %}
-- name: {{ package.name | default(package.keys() | first) }}
-  state: {{ package.state | default(package.values() | first) }}
+- name: {{ package.name | default(package.keys() | list | first) }}
+  state: {{ package.state | default(package.values() | list | first) }}
 {% if package.pip_extra_args is defined %}
   pip_extra_args: "{{ package.pip_extra_args }}"
 {% endif %}
