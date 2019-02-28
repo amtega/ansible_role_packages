@@ -9,16 +9,24 @@
     # the packages are already installed
 
     - name: check python pip tool
-      command: pip --version
+      command: "{{ packages_pip_command }} --version"
       failed_when: false
       changed_when: false
       register: packages_check_pip
+      vars:
+        packages_pip_command: "pip{{ ansible_facts.python.version_info.0 }}"
 
     - name: check python setup tools
-      command: easy_install --version
+      command: "{{ packages_easy_install_command }} --version"
       failed_when: false
       changed_when: false
       register: packages_check_setup_tools
+      vars:
+        packages_easy_install_command: >-
+          {{ "easy_install-"
+              + ansible_facts.python.version_info.0 | string
+              + "."
+              + ansible_facts.python.version_info.1 | string }}
 
     - name: setup operating system packages
       package:
