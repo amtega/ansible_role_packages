@@ -38,7 +38,8 @@
               | ternary(python_extra_packages, []) }}
       loop_control:
         loop_var: package
-        label: "{{ package.name }} {{ package.state }}"
+        label: >-
+          {{ package.name | default('') }} {{ package.state | default('') }}
       vars:
         python_pip_packages:
           - name: python-pip
