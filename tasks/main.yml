@@ -28,24 +28,6 @@
               + "."
               + ansible_facts.python.version_info.1 | string }}
 
-    - debug: var=t
-      vars:
-        t: >-
-          {{ lookup('template', 'packages.yml.j2') | from_yaml
-             + (packages_python is not none)
-                | ternary(python_extra_packages, []) }}
-        python_pip_packages:
-          - name: python-pip
-            state: present
-        python_setup_tools_packages:
-          - name: python-setuptools
-            state: present
-        python_extra_packages: >-
-          {{ (packages_check_pip.rc != 0)
-             | ternary(python_pip_packages, [])
-             + (packages_check_setup_tools.rc != 0)
-               | ternary(python_setup_tools_packages, []) }}
-
     - name: setup operating system packages
       package:
         name: "{{ package.name }}"
@@ -56,7 +38,8 @@
               | ternary(python_extra_packages, []) }}
       loop_control:
         loop_var: package
-        label: "{{ package.name }} {{ package.state }}"
+        label: >-
+          {{ package.name | default('') }} {{ package.state | default('') }}
       vars:
         python_pip_packages:
           - name: python-pip
