@@ -42,10 +42,10 @@
           {{ package.name | default('') }} {{ package.state | default('') }}
       vars:
         python_pip_packages:
-          - name: Python-pip
+          - name: python-pip
             state: present
         python_setup_tools_packages:
-          - name: Python-setuptools
+          - name: python-setuptools
             state: present
         python_extra_packages: >-
           {{ (packages_check_pip.rc != 0)
