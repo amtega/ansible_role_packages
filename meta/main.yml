@@ -32,16 +32,18 @@ galaxy_info:
 
 dependencies:
   - role: amtega.check_platform
-    check_platform_distributions:
-      centos: 6
-      debian: 9
-      fedora: 27
-      rhel: 6
+    vars:
+      check_platform_distributions:
+        centos: 6
+        debian: 9
+        fedora: 27
+        rhel: 6
     tags:
       - role::packages
 
   - role: amtega.proxy_client
-    proxy_client_permanent: no
+    vars:
+      proxy_client_permanent: no
     tags:
       - role::packages
 

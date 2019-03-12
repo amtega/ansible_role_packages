@@ -1,7 +1,7 @@
 ---
 # Tasks for testing role
 
-- name: run idempotence test
+- name: Run idempotence test
   hosts: localhost
   roles:
     - role: amtega.docker_presets
@@ -17,7 +17,7 @@
   tags:
     - sandbox
 
-- name: test packages role
+- name: Test packages role
   hosts: docker_sandbox_containers
   roles:
     - role: amtega.packages
@@ -63,7 +63,7 @@
   tags:
     - idempotence
 
-- name: cleanup docker docker sandbox
+- name: Cleanup docker docker sandbox
   hosts: localhost
   roles:
     - role: amtega.docker_sandbox
