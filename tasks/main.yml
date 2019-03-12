@@ -8,7 +8,7 @@
     # not necessary, as this module always require root privileges even though
     # the packages are already installed
 
-    - name: check python pip tool
+    - name: Check python pip tool
       command: "{{ packages_pip_command }} --version"
       failed_when: false
       changed_when: false
@@ -16,7 +16,7 @@
       vars:
         packages_pip_command: "pip{{ ansible_facts.python.version_info.0 }}"
 
-    - name: check python setup tools
+    - name: Check python setup tools
       command: "{{ packages_easy_install_command }} --version"
       failed_when: false
       changed_when: false
@@ -28,7 +28,7 @@
               + "."
               + ansible_facts.python.version_info.1 | string }}
 
-    - name: setup operating system packages
+    - name: Setup operating system packages
       package:
         name: "{{ package.name }}"
         state: "{{ package.state }}"
@@ -42,10 +42,10 @@
           {{ package.name | default('') }} {{ package.state | default('') }}
       vars:
         python_pip_packages:
-          - name: python-pip
+          - name: Python-pip
             state: present
         python_setup_tools_packages:
-          - name: python-setuptools
+          - name: Python-setuptools
             state: present
         python_extra_packages: >-
           {{ (packages_check_pip.rc != 0)
@@ -58,7 +58,7 @@
         - role::packages
         - role::packages::os
 
-    - name: setup python packages
+    - name: Setup python packages
       pip:
         name: "{{ package.name }}"
         state: "{{ package.state }}"
