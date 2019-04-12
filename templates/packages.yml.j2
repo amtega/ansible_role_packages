@@ -13,18 +13,30 @@
       and packages_spec[distro][release] is not string
       and packages_spec[distro][release] is not mapping  %}
 {% for package in packages_spec[distro][release] %}
+{% if packages_already_managed
+      | selectattr("name", "equalto", package.name)
+      | selectattr("state", "equalto", package.state)
+      | list
+      | length == 0 %}
 {% set ns.found = true %}
 - name: "{{ package.name | default(package.keys() | list | first) }}"
   state: "{{ package.state | default(package.values() | list | first) }}"
+{% endif %}
 {% if package.pip_extra_args is defined %}
   pip_extra_args: "{{ package.pip_extra_args }}"
 {% endif %}
 {% endfor %}
 {% else %}
 {% for package in packages_spec[distro][release] %}
+{% if packages_already_managed
+      | selectattr("name", "equalto", package)
+      | selectattr("state", "equalto", packages_spec[distro][release][package])
+      | list
+      | length == 0 %}
 {% set ns.found = true %}
 - name: {{ package }}
   state: {{ packages_spec[distro][release][package] }}
+{% endif %}
 {% endfor %}
 {% endif %}
 {% endif %}

@@ -28,53 +28,74 @@
               + "."
               + ansible_facts.python.version_info.1 | string }}
 
-    - name: Setup operating system packages
-      package:
-        name: "{{ package.name }}"
-        state: "{{ package.state }}"
-      loop: >-
-        {{ lookup('template', 'packages.yml.j2') | from_yaml
-           + (packages_python is not none)
-              | ternary(python_extra_packages, []) }}
-      loop_control:
-        loop_var: package
-        label: >-
-          {{ package.name | default('') }} {{ package.state | default('') }}
+    - block:
+        - name: Setup operating system packages
+          package:
+            name: "{{ package.name }}"
+            state: "{{ package.state }}"
+          loop: "{{ packages_to_manage }}"
+          loop_control:
+            loop_var: package
+            label: >-
+              {{ package.name | default('') }} {{ package.state | default('') }}
+
+        - name: Setup fact with operating packages managed
+          set_fact:
+            packages_os_managed: "{{ packages_to_manage }}"
       vars:
         python_pip_packages:
           - name: python-pip
             state: present
+
         python_setup_tools_packages:
           - name: python-setuptools
             state: present
+
         python_extra_packages: >-
           {{ (packages_check_pip.rc != 0)
              | ternary(python_pip_packages, [])
              + (packages_check_setup_tools.rc != 0)
                | ternary(python_setup_tools_packages, []) }}
 
+        packages_to_manage: >-
+          {{ lookup('template', 'packages.yml.j2') | from_yaml
+             + (packages_python is not none)
+                | ternary(python_extra_packages, []) }}
+
+        packages_already_managed: "{{ packages_os_managed | default([]) }}"
+
         packages_spec: "{{ packages_os }}"
       tags:
         - role::packages
         - role::packages::os
 
-    - name: Setup python packages
-      pip:
-        name: "{{ package.name }}"
-        state: "{{ package.state }}"
-        extra_args: >-
-          {{ packages_pip_extra_args }}
-          {{ package.pip_extra_args | default('') }}
-      loop: >-
-        {{ lookup('template', 'packages.yml.j2') | from_yaml }}
-      loop_control:
-        loop_var: package
-        label: "{{ package.name }} {{ package.state }}"
+    - block:
+        - name: Setup python packages
+          pip:
+            name: "{{ package.name }}"
+            state: "{{ package.state }}"
+            extra_args: >-
+              {{ packages_pip_extra_args }}
+              {{ package.pip_extra_args | default('') }}
+          loop: "{{ packages_to_manage }}"
+          loop_control:
+            loop_var: package
+            label: "{{ package.name }} {{ package.state }}"
+
+        - name: Setup fact with operating packages managed
+          set_fact:
+            packages_python_managed: "{{ packages_to_manage }}"
       vars:
+        packages_to_manage: >-
+          {{ lookup('template', 'packages.yml.j2') | from_yaml }}
+
+        packages_already_managed: "{{ packages_python_managed | default([]) }}"
+
         packages_spec: "{{ packages_python }}"
       tags:
         - role::packages
         - role::packages::python
+
   environment: "{{ proxy_client_environment }}"
   tags:
     - role::packages
