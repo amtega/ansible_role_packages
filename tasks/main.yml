@@ -41,7 +41,8 @@
 
         - name: Setup fact with operating packages managed
           set_fact:
-            packages_os_managed: "{{ packages_to_manage }}"
+            packages_os_managed: >-
+              {{ packages_os_managed | default([]) + packages_to_manage }}
       vars:
         python_pip_packages:
           - name: python-pip
@@ -84,7 +85,8 @@
 
         - name: Setup fact with operating packages managed
           set_fact:
-            packages_python_managed: "{{ packages_to_manage }}"
+            packages_python_managed: >-
+              {{ packages_python_managed | default([]) + packages_to_manage }}
       vars:
         packages_to_manage: >-
           {{ lookup('template', 'packages.yml.j2') | from_yaml }}

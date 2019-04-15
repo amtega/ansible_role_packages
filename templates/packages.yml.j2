@@ -13,11 +13,11 @@
       and packages_spec[distro][release] is not string
       and packages_spec[distro][release] is not mapping  %}
 {% for package in packages_spec[distro][release] %}
-{% if packages_already_managed
-      | selectattr("name", "equalto", package.name)
-      | selectattr("state", "equalto", package.state)
-      | list
-      | length == 0 %}
+{% set search_already_managed = packages_already_managed
+                                | selectattr("name", "equalto", package.name)
+                                | list %}
+{% if search_already_managed | length == 0
+      or (search_already_managed | first).state != package.state %}
 {% set ns.found = true %}
 - name: "{{ package.name | default(package.keys() | list | first) }}"
   state: "{{ package.state | default(package.values() | list | first) }}"
@@ -28,11 +28,11 @@
 {% endfor %}
 {% else %}
 {% for package in packages_spec[distro][release] %}
-{% if packages_already_managed
-      | selectattr("name", "equalto", package)
-      | selectattr("state", "equalto", packages_spec[distro][release][package])
-      | list
-      | length == 0 %}
+{% set search_already_managed = packages_already_managed
+                                | selectattr("name", "equalto", package)
+                                | list %}
+{% if search_already_managed | length == 0
+      or (search_already_managed | first).state != packages_spec[distro][release][package] %}
 {% set ns.found = true %}
 - name: {{ package }}
   state: {{ packages_spec[distro][release][package] }}
