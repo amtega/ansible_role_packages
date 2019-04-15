@@ -1,3 +1,21 @@
+{%- macro package_dict(name, state, pip_extra_args) -%}
+{% set search_already_managed = packages_already_managed
+                                | selectattr("name", "equalto", name)
+                                | list %}
+{% if (search_already_managed | length == 0
+       or (search_already_managed | first).state != state)
+      and (state != "present"
+           or (state == "present"
+               and name not in packages_already_present)) %}
+{% set ns.found = true %}
+- name: "{{ name }}"
+  state: "{{ state }}"
+{% endif %}
+{% if pip_extra_args | length > 0 %}
+  pip_extra_args: "{{ pip_extra_args }}"
+{% endif %}
+{%- endmacro -%}
+
 {% set ns = namespace(found=false) %}
 {% if packages_spec is not none %}
 {% for distro in packages_spec.keys() | list %}
@@ -13,30 +31,16 @@
       and packages_spec[distro][release] is not string
       and packages_spec[distro][release] is not mapping  %}
 {% for package in packages_spec[distro][release] %}
-{% set search_already_managed = packages_already_managed
-                                | selectattr("name", "equalto", package.name)
-                                | list %}
-{% if search_already_managed | length == 0
-      or (search_already_managed | first).state != package.state %}
-{% set ns.found = true %}
-- name: "{{ package.name | default(package.keys() | list | first) }}"
-  state: "{{ package.state | default(package.values() | list | first) }}"
-{% endif %}
-{% if package.pip_extra_args is defined %}
-  pip_extra_args: "{{ package.pip_extra_args }}"
-{% endif %}
+{% set package_name = package.name | default(package.keys() | list | first) %}
+{% set package_state =  package.state | default(package.values() | list | first) %}
+{% set packages_pip_extra_args = package.pip_extra_args | default("") %}
+{{ package_dict(package_name, package_state, packages_pip_extra_args) }}
 {% endfor %}
 {% else %}
 {% for package in packages_spec[distro][release] %}
-{% set search_already_managed = packages_already_managed
-                                | selectattr("name", "equalto", package)
-                                | list %}
-{% if search_already_managed | length == 0
-      or (search_already_managed | first).state != packages_spec[distro][release][package] %}
-{% set ns.found = true %}
-- name: {{ package }}
-  state: {{ packages_spec[distro][release][package] }}
-{% endif %}
+{% set package_name = package %}
+{% set package_state = packages_spec[distro][release][package] %}
+{{ package_dict(package_name, package_state, packages_pip_extra_args) }}
 {% endfor %}
 {% endif %}
 {% endif %}
