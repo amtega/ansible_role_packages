@@ -2,79 +2,106 @@
 # Role tasks
 
 - block:
-    # Python packages can be installed in user home directory using `--user`
-    # argument and without root privileged. So here we check the existence of
-    # the python required tools to avoid calling the ansible `package` module if
-    # not necessary, as this module always require root privileges even though
-    # the packages are already installed
-
-    - name: Check python pip tool
-      command: "{{ packages_pip_command }} --version"
-      failed_when: false
-      changed_when: false
-      register: packages_check_pip
-      vars:
-        packages_pip_command: "pip{{ ansible_facts.python.version_info.0 }}"
-
-    - name: Check python setup tools
-      command: "{{ packages_easy_install_command }} --version"
-      failed_when: false
-      changed_when: false
-      register: packages_check_setup_tools
-      vars:
-        packages_easy_install_command: >-
-          {{ "easy_install-"
-              + ansible_facts.python.version_info.0 | string
-              + "."
-              + ansible_facts.python.version_info.1 | string }}
-
-    - name: Setup operating system packages
-      package:
-        name: "{{ package.name }}"
-        state: "{{ package.state }}"
-      loop: >-
-        {{ lookup('template', 'packages.yml.j2') | from_yaml
-           + (packages_python is not none)
-              | ternary(python_extra_packages, []) }}
-      loop_control:
-        loop_var: package
-        label: >-
-          {{ package.name | default('') }} {{ package.state | default('') }}
-      vars:
-        python_pip_packages:
-          - name: python-pip
+    - block:
+        - name: Setup package manager python bindings
+          package:
+            name: python-apt
             state: present
-        python_setup_tools_packages:
-          - name: python-setuptools
+          when: ansible_facts.os_family | lower == "debian"
+
+        - name: Get operating system packages facts
+          package_facts:
+
+        - name: Setup operating system packages
+          package:
+            name: "{{ package.name }}"
+            state: "{{ package.state }}"
+          loop: "{{ packages_to_manage }}"
+          loop_control:
+            loop_var: package
+            label: >-
+              {{ package.name | default('') }} {{ package.state | default('') }}
+
+        - name: Setup fact with operating packages managed
+          set_fact:
+            packages_os_managed: >-
+              {{ packages_os_managed | default([]) + packages_to_manage }}
+      vars:
+        pip_package: >-
+          {{ lookup("template", "pip_packages.yml.j2") | trim }}
+
+        python_setup_tools_package: >-
+          {{ lookup("template", "setuptools_packages.yml.j2") | trim }}
+
+        python_pip_packages_spec:
+          - name: "{{ pip_package }}"
             state: present
+
+        python_setup_tools_packages_spec:
+          - name: "{{ pip_package }}"
+            state: present
+
         python_extra_packages: >-
-          {{ (packages_check_pip.rc != 0)
-             | ternary(python_pip_packages, [])
-             + (packages_check_setup_tools.rc != 0)
-               | ternary(python_setup_tools_packages, []) }}
+          {{ (pip_package not in ansible_facts.packages.keys() | list)
+             | ternary(python_pip_packages_spec, [])
+             + (python_setup_tools_package
+                not in ansible_facts.packages.keys() | list)
+               | ternary(python_setup_tools_packages_spec, []) }}
+
+        packages_to_manage: >-
+          {{ lookup('template', 'packages.yml.j2') | from_yaml
+             + (packages_python is not none)
+                | ternary(python_extra_packages, []) }}
+
+        packages_already_managed: "{{ packages_os_managed | default([]) }}"
+
+        packages_already_present: "{{ ansible_facts.packages.keys() | list }}"
 
         packages_spec: "{{ packages_os }}"
       tags:
         - role::packages
         - role::packages::os
 
-    - name: Setup python packages
-      pip:
-        name: "{{ package.name }}"
-        state: "{{ package.state }}"
-        extra_args: >-
-          {{ packages_pip_extra_args }}
-          {{ package.pip_extra_args | default('') }}
-      loop: >-
-        {{ lookup('template', 'packages.yml.j2') | from_yaml }}
-      loop_control:
-        loop_var: package
-        label: "{{ package.name }} {{ package.state }}"
+    - block:
+        - name: Get python packages facts
+          shell: pip list
+          args:
+            warn: no
+          changed_when: no
+          register: packages_get_python_facts_result
+
+        - name: Setup python packages
+          pip:
+            name: "{{ package.name }}"
+            state: "{{ package.state }}"
+            extra_args: >-
+              {{ packages_pip_extra_args }}
+              {{ package.pip_extra_args | default('') }}
+          loop: "{{ packages_to_manage }}"
+          loop_control:
+            loop_var: package
+            label: "{{ package.name }} {{ package.state }}"
+
+        - name: Setup fact with python packages managed
+          set_fact:
+            packages_python_managed: >-
+              {{ packages_python_managed | default([]) + packages_to_manage }}
       vars:
+        packages_to_manage: >-
+          {{ lookup('template', 'packages.yml.j2') | from_yaml }}
+
+        packages_already_managed: "{{ packages_python_managed | default([]) }}"
+
+        packages_already_present: >-
+          {{ packages_get_python_facts_result.stdout_lines
+             | map("regex_replace", "(.*) \(.*\)", "\1")
+             | list }}
+
         packages_spec: "{{ packages_python }}"
       tags:
         - role::packages
         - role::packages::python
+
   environment: "{{ proxy_client_environment }}"
   tags:
     - role::packages
