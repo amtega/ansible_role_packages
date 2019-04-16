@@ -68,7 +68,7 @@
           args:
             warn: no
           changed_when: no
-          when: packages_python
+          when: packages_python is not none
           register: packages_get_python_facts_result
 
         - name: Setup python packages
