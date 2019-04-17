@@ -10,9 +10,9 @@
 {% set ns.found = true %}
 - name: "{{ name }}"
   state: "{{ state }}"
-{% endif %}
 {% if pip_extra_args | length > 0 %}
   pip_extra_args: "{{ pip_extra_args }}"
+{% endif %}
 {% endif %}
 {%- endmacro -%}
 
