@@ -3,9 +3,6 @@
 
 - block:
     - block:
-        - debug: msg="{{ lookup('template', 'packages.yml.j2') }}"
-
-
         - name: Setup package manager python bindings
           package:
             name: python-apt
