@@ -3,9 +3,6 @@
 
 - block:
     - block:
-        - debug: msg="{{ lookup('template', 'packages.yml.j2') }}"
-
-
         - name: Setup package manager python bindings
           package:
             name: python-apt
@@ -67,7 +64,7 @@
 
     - block:
         - name: Get python packages facts
-          shell: pip list
+          shell: "pip{{ ansible_facts.python.version.major }} list"
           args:
             warn: no
           changed_when: no
