@@ -38,7 +38,7 @@
             state: present
 
         python_setup_tools_packages_spec:
-          - name: "{{ pip_package }}"
+          - name: "{{ python_setup_tools_package }}"
             state: present
 
         python_extra_packages: >-
@@ -95,6 +95,7 @@
 
         packages_already_present: >-
           {{ packages_get_python_facts_result.stdout_lines
+             | default([])
              | map("regex_replace", "(.*) \(.*\)", "\1")
              | list }}
 
