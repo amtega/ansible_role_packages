@@ -58,6 +58,8 @@
         packages_already_present: "{{ ansible_facts.packages.keys() | list }}"
 
         packages_spec: "{{ packages_os }}"
+
+        packages_spec_hostvars: "{{ packages_os_hostvars | default([]) }}"
       tags:
         - role::packages
         - role::packages::os
@@ -100,6 +102,8 @@
              | list }}
 
         packages_spec: "{{ packages_python }}"
+
+        packages_spec_hostvars: "{{ packages_python_hostvars | default([]) }}"
       tags:
         - role::packages
         - role::packages::python

@@ -17,47 +17,62 @@
   tags:
     - sandbox
 
+- name: Prepare docker containers for test
+  hosts: docker_sandbox_containers
+  tasks:
+    - name: Setup extra packages
+      set_fact:
+        packages_os_extra:
+          all:
+            all:
+              lynx: present
+        packages_python_extra:
+          centos:
+            7:
+              lxml: present
+  tags:
+    - idempotence
+
 - name: Test packages role
   hosts: docker_sandbox_containers
   roles:
     - role: amtega.packages
-      packages_os:
-        all:
-          all:
-            lynx: present
-        centos:
-          all:
-            telnet: present
-          6:
-            httpd: present
-          7:
-            - name: "{{ package_name }}"
-              state: present
-            - tomcat: present
-        fedora:
-          27:
-            httpd: present
-            tomcat: present
-          28:
-            httpd: present
-            tomcat: present
-      packages_python:
-        debian:
-          9:
-            "pexpect>=3.3": present
-        centos:
-          6:
-            - "pexpect>=3.3": present
-            - "gitlab": present
-          7:
-            "pexpect>=3.3": present
-        fedora:
-          27:
-            - name: "pexpect>=3.3"
-              state: present
-              pip_extra_args: "--upgrade"
-          28:
-            "pexpect>=3.3": present
+      vars:
+        packages_load_from_hostvars: yes
+        packages_os:
+          centos:
+            all:
+              telnet: present
+            6:
+              httpd: present
+            7:
+              - name: "{{ package_name }}"
+                state: present
+              - tomcat: present
+          fedora:
+            27:
+              httpd: present
+              tomcat: present
+            28:
+              httpd: present
+              tomcat: present
+        packages_python:
+          debian:
+            9:
+              "pexpect>=3.3": present
+          centos:
+            6:
+              - "pexpect>=3.3": present
+              - "gitlab": present
+            7:
+              "pexpect>=3.3": present
+          fedora:
+            27:
+              - name: "pexpect>=3.3"
+                state: present
+                pip_extra_args: "--upgrade"
+            28:
+              "pexpect>=3.3": present
   vars:
     package_name: "httpd"
   tags:
