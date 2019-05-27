@@ -16,6 +16,10 @@
 {% endif %}
 {%- endmacro -%}
 
+{% if packages_spec_hostvars | length > 0%}
+{% set packages_spec = packages_spec | combine(packages_spec_hostvars) %}
+{% endif %}
+
 {% set ns = namespace(found=false) %}
 {% if packages_spec is not none %}
 {% for distro in packages_spec.keys() | list %}

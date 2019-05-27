@@ -94,3 +94,23 @@ packages_python:
 #
 
 packages_pip_extra_args: ""
+
+# Indicate packages must be loaded also from host variables. See
+# `packages_os_load_from_hostvars` and `packages_python_load_from_hostvars`
+# variables below for details
+
+packages_load_from_hostvars: no
+
+# Indicate `packages_os` must be loaded also from host variables. Any host
+# variable that begins with "packages_os_*" and contains the necessary
+# attributes will be loaded as an item to manage by the role. The variables must
+# follow the structure detailed before for `packages_os`
+
+packages_os_load_from_hostvars: "{{ packages_load_from_hostvars }}"
+
+# Indicate `packages_python` must be loaded also from host variables. Any host
+# variable that begins with "packages_python_*" and contains the necessary
+# attributes will be loaded as an item to manage by the role. The variables must
+# follow the structure detailed before for `packages_python`
+
+packages_python_load_from_hostvars: "{{ packages_load_from_hostvars }}"
