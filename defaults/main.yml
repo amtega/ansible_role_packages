@@ -84,19 +84,19 @@ packages_os:
 #         virtualenv: <path>
 #         virtualenv_command: <path>
 #         virtualenv_site_packages: <path>
-#         pip_extra_args: <args>
+#         extra_args: <args>
 #       - name: <package name2>
 #         state: <state>
 #         virtualenv: <path>
 #         virtualenv_command: <path>
 #         virtualenv_site_packages: <path>
-#         pip_extra_args: <args>
+#         extra_args: <args>
 #       - name: <package name3>
 #         state: <state>
 #         virtualenv: <path>
 #         virtualenv_command: <path>
 #         virtualenv_site_packages: <path>
-#         pip_extra_args: <args>
+#         extra_args: <args>
 #    ...
 # }
 
@@ -106,7 +106,7 @@ packages_python:
 # Global extra arguments for the python pip tool if no other ones are specified
 # in the package config. See `packages_python` documentation before
 #
-
+# packages_python_virtualenv:
 # packages_python_virtualenv_command:
 # packages_python_virtualenv_python:
 # packages_python_virtualenv_site_packages:
