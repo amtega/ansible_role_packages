@@ -1,4 +1,4 @@
-{%- macro package_dict(name, state, pip_extra_args) -%}
+{%- macro package_dict(name, state, virtualenv=none, virtualenv_command=none, virtualenv_python=none, virtualenv_site_packages=none, extra_args=none) -%}
 {% set search_already_managed = packages_already_managed
                                 | selectattr("name", "equalto", name)
                                 | list %}
@@ -10,8 +10,20 @@
 {% set ns.found = true %}
 - name: "{{ name }}"
   state: "{{ state }}"
-{% if pip_extra_args | length > 0 %}
-  pip_extra_args: "{{ pip_extra_args }}"
+{% if virtualenv is not none and virtualenv | length > 0 %}
+  virtualenv: "{{ virtualenv }}"
+{% endif %}
+{% if virtualenv_command is not none and virtualenv_command | length > 0 %}
+  virtualenv_command: "{{ virtualenv_command }}"
+{% endif %}
+{% if virtualenv_python is not none and virtualenv_python | length > 0 %}
+  virtualenv_python: "{{ virtualenv_python }}"
+{% endif %}
+{% if virtualenv_site_packages is not none %}
+  virtualenv_site_packages: "{{ virtualenv_site_packages }}"
+{% endif %}
+{% if extra_args is not none and extra_args | length > 0 %}
+  extra_args: "{{ extra_args }}"
 {% endif %}
 {% endif %}
 {%- endmacro -%}
@@ -36,15 +48,19 @@
       and packages_spec[distro][release] is not mapping  %}
 {% for package in packages_spec[distro][release] %}
 {% set package_name = package.name | default(package.keys() | list | first) %}
-{% set package_state =  package.state | default(package.values() | list | first) %}
-{% set packages_pip_extra_args = package.pip_extra_args | default("") %}
-{{ package_dict(package_name, package_state, packages_pip_extra_args) }}
+{% set package_state = package.state | default(package.values() | list | first) %}
+{% set package_virtualenv = package.virtualenv | default(packages_python_virtualenv) | default(none) %}
+{% set package_virtualenv_command = package.virtualenv_command | default(packages_python_virtualenv_command) | default(none) %}
+{% set package_virtualenv_python = package.virtualenv_python | default(packages_python_virtualenv_python) | default(none) %}
+{% set package_virtualenv_site_packages = package.virtualenv_site_packages | default(packages_python_virtualenv_site_packages) | default(none) %}
+{% set package_extra_args = package.extra_args | default(packages_python_extra_args) | default(none) %}
+{{ package_dict(package_name, package_state, package_virtualenv, package_virtualenv_command, package_virtualenv_python, package_virtualenv_site_packages, package_extra_args) }}
 {% endfor %}
 {% else %}
 {% for package in packages_spec[distro][release] %}
 {% set package_name = package %}
 {% set package_state = packages_spec[distro][release][package] %}
-{{ package_dict(package_name, package_state, packages_pip_extra_args) }}
+{{ package_dict(package_name, package_state, packages_extra_args | default(none)) }}
 {% endfor %}
 {% endif %}
 {% endif %}
