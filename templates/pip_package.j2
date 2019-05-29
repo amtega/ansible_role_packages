@@ -1,0 +1,5 @@
+{%- if ansible_facts.distribution | lower == "fedora" %}
+python{{ ansible_facts.python.version.major | string }}-pip
+{%- else %}
+python-pip
+{%- endif %}

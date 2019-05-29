@@ -71,6 +71,8 @@
               - name: "pexpect>=3.3"
                 state: present
                 pip_extra_args: "--upgrade"
+                virtualenv: ~/.ansible_venv
+                virtualenv_site_packages: no
             28:
               "pexpect>=3.3": present
   vars:

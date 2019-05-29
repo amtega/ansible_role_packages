@@ -68,21 +68,34 @@ packages_os:
 # release combination. The structure of the dict is the same that for the
 # variable `packages_os`.
 #
-# This variable accepts also the extra pip arguments to use for an sepecific
-# package by adding `pip_extra_args` dictionary attribute to the expanded list
-# of packages:
+# This variable accepts also the following extra pip arguments for the python
+# packages, with the same meaning that in ansible `pip` module:
+#
+# - `virtualenv`
+# - `virtualenv_command`
+# - `virtualenv_site_packages`
+# - `pip_extra_args`
 #
 # {
 #   <distribution name 1>:
 #     <distribution 1 major release 1>:
 #       - name: <package name 1>
 #         state: <state (as expected by ansible package module)>
+#         virtualenv: <path>
+#         virtualenv_command: <path>
+#         virtualenv_site_packages: <path>
 #         pip_extra_args: <args>
 #       - name: <package name2>
 #         state: <state>
+#         virtualenv: <path>
+#         virtualenv_command: <path>
+#         virtualenv_site_packages: <path>
 #         pip_extra_args: <args>
 #       - name: <package name3>
 #         state: <state>
+#         virtualenv: <path>
+#         virtualenv_command: <path>
+#         virtualenv_site_packages: <path>
 #         pip_extra_args: <args>
 #    ...
 # }
@@ -90,10 +103,14 @@ packages_os:
 packages_python:
 
 #
-# Global extra arguments for the python pip tool
+# Global extra arguments for the python pip tool if no other ones are specified
+# in the package config. See `packages_python` documentation before
 #
 
-packages_pip_extra_args: ""
+# packages_python_virtualenv_command:
+# packages_python_virtualenv_python:
+# packages_python_virtualenv_site_packages:
+# packages_python_extra_args:
 
 # Indicate packages must be loaded also from host variables. See
 # `packages_os_load_from_hostvars` and `packages_python_load_from_hostvars`

@@ -28,10 +28,13 @@
               {{ packages_os_managed | default([]) + packages_to_manage }}
       vars:
         pip_package: >-
-          {{ lookup("template", "pip_packages.yml.j2") | trim }}
+          {{ lookup("template", "pip_package.j2") | trim }}
 
         python_setup_tools_package: >-
-          {{ lookup("template", "setuptools_packages.yml.j2") | trim }}
+          {{ lookup("template", "setuptools_package.j2") | trim }}
+
+        python_virtualenv_package: >-
+          {{ lookup("template", "virtualenv_package.j2") | trim }}
 
         python_pip_packages_spec:
           - name: "{{ pip_package }}"
@@ -41,12 +44,19 @@
           - name: "{{ python_setup_tools_package }}"
             state: present
 
+        python_virtualenv_packages_spec:
+          - name: "{{ python_virtualenv_package }}"
+            state: present
+
         python_extra_packages: >-
           {{ (pip_package not in ansible_facts.packages.keys() | list)
              | ternary(python_pip_packages_spec, [])
              + (python_setup_tools_package
                 not in ansible_facts.packages.keys() | list)
-               | ternary(python_setup_tools_packages_spec, []) }}
+               | ternary(python_setup_tools_packages_spec, [])
+             + (python_virtualenv_package
+                not in ansible_facts.packages.keys() | list)
+               | ternary(python_virtualenv_packages_spec, []) }}
 
         packages_to_manage: >-
           {{ lookup('template', 'packages.yml.j2') | from_yaml
@@ -77,9 +87,21 @@
           pip:
             name: "{{ package.name }}"
             state: "{{ package.state }}"
+            virtualenv: >-
+              {{ package.virtualenv | default(omit) }}
+            virtualenv_command: >-
+              {{ package.virtualenv_command
+                 | default(lookup("template", "virtualenv_command.j2"))
+                 | trim }}
+            virtualenv_python: >-
+              {{ package.virtualenv_python
+                 | default(omit) }}
+            virtualenv_site_packages: >-
+              {{ package.virtualenv_site_packages
+                 | default(omit) }}
             extra_args: >-
-              {{ packages_pip_extra_args }}
-              {{ package.pip_extra_args | default('') }}
+              {{ package.extra_args
+                 | default(omit) }}
           loop: "{{ packages_to_manage }}"
           loop_control:
             loop_var: package
