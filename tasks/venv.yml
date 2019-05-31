@@ -1,0 +1,22 @@
+---
+# Role setup facts tasks
+
+- block:
+    - name: Setup python virtualenv
+      command: >-
+        {{ virtualenv_command }} \
+        --python={{ ansible_python_interpreter }} \
+        {{ (packages_python_virtualenv_site_packages)
+           | ternary("--system-site-packages", "") }} \
+        {{ packages_python_virtualenv }}
+      args:
+        creates: "{{ packages_python_virtualenv }}"
+      vars:
+        ansible_python_interpreter: >-
+          {{ (ansible_facts.distribution_major_version is version("8", "<"))
+             | ternary("/usr/bin/python", "/usr/bin/python3") }}
+        virtualenv_command: >-
+          {{ (ansible_facts.distribution_major_version is version("8", "<"))
+              | ternary("/usr/bin/virtualenv", "/usr/bin/virtualenv-3") }}
+  tags:
+    - always

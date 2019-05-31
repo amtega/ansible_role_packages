@@ -102,15 +102,27 @@ packages_os:
 
 packages_python:
 
-#
+
 # Global extra arguments for the python pip tool if no other ones are specified
 # in the package config. See `packages_python` documentation before
 #
-# packages_python_virtualenv:
+# By default the role installs the python packages into a virtualenv in order to
+# not overwrite the python packages installed by the operating system
+
+packages_python_virtualenv: /var/lib/ansible/venv
 # packages_python_virtualenv_command:
 # packages_python_virtualenv_python:
-# packages_python_virtualenv_site_packages:
+packages_python_virtualenv_site_packages: yes
 # packages_python_extra_args:
+
+# Indicate if `ansible_python_interpreter` must be pointed by the role to the
+# virtualenv python interpreter located in the path defined by the variable
+# `packages_python_virtualenv`. This ensures that the virtualenv defined is used
+# by the ansible tasks, but you can get the same functionality if you point in
+# your inventory the variable `ansible_python_interpreter` to the python binary
+# inside the path defined in `packages_python_virtualenv`
+
+packages_python_set_ansible_interpreter: yes
 
 # Indicate packages must be loaded also from host variables. See
 # `packages_os_load_from_hostvars` and `packages_python_load_from_hostvars`
