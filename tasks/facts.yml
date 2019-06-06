@@ -13,8 +13,11 @@
         packages_python_bin_dir: >-
           {{ packages_ansible_python_interpreter | dirname }}/
       when: packages_stat_python_result.stat.exists
+  when:
+    - packages_python_virtualenv is not none
+    - packages_python_virtualenv | length > 0
   vars:
     packages_ansible_python_interpreter: >-
       {{ packages_python_virtualenv }}/bin/python
   tags:
-    - always
+    - role::packages

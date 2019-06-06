@@ -2,7 +2,9 @@
 # Role tasks
 
 - include_tasks: os.yml
-  when: packages_os is not none or packages_python is not none
+  when: >-
+    packages_os is not none
+    or packages_python is not none
   tags:
     - role::packages
     - role::packages::os
@@ -13,7 +15,8 @@
     - packages_python_virtualenv is defined
     - packages_python_virtualenv | length > 0
   tags:
-    - always
+    - role::packages
+    - role::packages::python
 
 - include_tasks: facts.yml
   when:
@@ -22,7 +25,7 @@
     - packages_python_virtualenv | length > 0
     - packages_python_set_ansible_interpreter
   tags:
-    - always
+    - role::packages
 
 - include_tasks: python.yml
   when: packages_python is not none

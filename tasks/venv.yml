@@ -12,11 +12,16 @@
       args:
         creates: "{{ packages_python_virtualenv }}"
       vars:
+        packages_python_bin_suffix: >-
+          {{ (ansible_facts.python.version.major is version("3", "<"))
+             | ternary("", ansible_facts.python.version.major | string) }}
+        packages_virtualenv_bin_suffix: >-
+          {{ (ansible_facts.python.version.major is version("3", "<"))
+             | ternary("", "-" + ansible_facts.python.version.major | string) }}
         ansible_python_interpreter: >-
-          {{ (ansible_facts.distribution_major_version is version("8", "<"))
-             | ternary("/usr/bin/python", "/usr/bin/python3") }}
+          /usr/bin/python{{ packages_python_bin_suffix }}
         virtualenv_command: >-
-          {{ (ansible_facts.distribution_major_version is version("8", "<"))
-              | ternary("/usr/bin/virtualenv", "/usr/bin/virtualenv-3") }}
+          /usr/bin/virtualenv{{ packages_virtualenv_bin_suffix }}
   tags:
-    - always
+    - role::packages
+    - role::packages::python
