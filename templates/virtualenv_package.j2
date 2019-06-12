@@ -1,5 +1,6 @@
-{%- if ansible_facts.distribution | lower == "fedora" %}
-python{{ ansible_facts.python.version.major | string }}-virtualenv
+{%- if ansible_facts.python.version.major is version("3", "<") %}
+{%- set suffix = "" %}
 {%- else %}
-python-virtualenv
+{%- set suffix = "-" + ansible_facts.python.version.major | string %}
 {%- endif %}
+python{{ suffix }}-virtualenv

@@ -1,0 +1,75 @@
+---
+# Setup operating system packages tasks
+
+- block:
+    - name: Setup package manager python bindings
+      package:
+        name: python-apt
+        state: present
+      when: ansible_facts.os_family | lower == "debian"
+
+    - name: Get operating system packages facts
+      package_facts:
+
+    - name: Setup operating system packages
+      package:
+        name: "{{ package.name }}"
+        state: "{{ package.state }}"
+      loop: "{{ packages_to_manage }}"
+      loop_control:
+        loop_var: package
+        label: >-
+          {{ package.name | default('') }} {{ package.state | default('') }}
+
+    - name: Setup fact with operating packages managed
+      set_fact:
+        packages_os_managed: >-
+          {{ packages_os_managed | default([]) + packages_to_manage }}
+  environment: "{{ proxy_client_environment }}"
+  vars:
+    pip_package: >-
+      {{ lookup("template", "pip_package.j2") | trim }}
+
+    python_setup_tools_package: >-
+      {{ lookup("template", "setuptools_package.j2") | trim }}
+
+    python_virtualenv_package: >-
+      {{ lookup("template", "virtualenv_package.j2") | trim }}
+
+    python_pip_packages_spec:
+      - name: "{{ pip_package }}"
+        state: present
+
+    python_setup_tools_packages_spec:
+      - name: "{{ python_setup_tools_package }}"
+        state: present
+
+    python_virtualenv_packages_spec:
+      - name: "{{ python_virtualenv_package }}"
+        state: present
+
+    python_extra_packages: >-
+      {{ (pip_package not in ansible_facts.packages.keys() | list)
+         | ternary(python_pip_packages_spec, [])
+         + (python_setup_tools_package
+            not in ansible_facts.packages.keys() | list)
+           | ternary(python_setup_tools_packages_spec, [])
+         + (python_virtualenv_package
+            not in ansible_facts.packages.keys() | list)
+           | ternary(python_virtualenv_packages_spec, []) }}
+
+    packages_to_manage: >-
+      {{ lookup('template', 'packages.yml.j2') | from_yaml
+         + (packages_python is not none)
+            | ternary(python_extra_packages, []) }}
+
+    packages_already_managed: "{{ packages_os_managed | default([]) }}"
+
+    packages_already_present: "{{ ansible_facts.packages.keys() | list }}"
+
+    packages_spec: "{{ packages_os }}"
+
+    packages_spec_hostvars: "{{ packages_os_hostvars | default([]) }}"
+  tags:
+    - role::packages
+    - role::packages::os
