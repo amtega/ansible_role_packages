@@ -60,7 +60,7 @@ dependencies:
         pattern: "^packages_os_.*"
         fact_name: packages_os_hostvars
         output_type: list
-    when: packages_os_load_from_hostvars
+    when: packages_os_load_from_hostvars | bool
     tags:
       - role::packages
 
@@ -70,6 +70,6 @@ dependencies:
         pattern: "^packages_python_.*"
         fact_name: packages_python_hostvars
         output_type: list
-    when: packages_python_load_from_hostvars
+    when: packages_python_load_from_hostvars | bool
     tags:
       - role::packages

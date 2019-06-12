@@ -23,7 +23,7 @@
     - packages_python is not none
     - packages_python_virtualenv is defined
     - packages_python_virtualenv | length > 0
-    - packages_python_set_ansible_interpreter
+    - packages_python_set_ansible_interpreter | bool
   tags:
     - role::packages
 
