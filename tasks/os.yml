@@ -2,10 +2,16 @@
 # Setup operating system packages tasks
 
 - block:
-    - name: Setup package manager python bindings
-      package:
-        name: python-apt
-        state: present
+    - block:
+        - name: Setup package manager python bindings
+          apt:
+            name: python-apt
+            state: present
+
+        - name: Setup aptitude
+          apt:
+            name: aptitude
+            state: present
       when: ansible_facts.os_family | lower == "debian"
 
     - name: Get operating system packages facts
@@ -30,8 +36,7 @@
     pip_package: >-
       {{ lookup("template", "pip_package.j2") | trim }}
 
-    python_setup_tools_package: >-
-      {{ lookup("template", "setuptools_package.j2") | trim }}
+    python_setup_tools_package: python-setuptools
 
     python_virtualenv_package: >-
       {{ lookup("template", "virtualenv_package.j2") | trim }}

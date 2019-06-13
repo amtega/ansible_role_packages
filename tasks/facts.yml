@@ -21,3 +21,4 @@
       {{ packages_python_virtualenv }}/bin/python
   tags:
     - role::packages
+    - role::packages::facts

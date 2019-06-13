@@ -9,8 +9,8 @@
         [? starts_with(name, `centos-6`)
            || starts_with(name, `centos-7`)
            || starts_with(name, `debian-9`)
-           || starts_with(name, `fedora-27`)
-           || starts_with(name, `fedora-28`) ]
+           || starts_with(name, `fedora-29`)
+           || starts_with(name, `fedora-30`) ]
 
     - role: amtega.docker_sandbox
       docker_sandbox_state: started

@@ -4,7 +4,7 @@
 - block:
     - name: Setup python virtualenv
       command: >-
-        {{ virtualenv_command }} \
+        /usr/bin/virtualenv \
         --python={{ ansible_python_interpreter }} \
         {{ (packages_python_virtualenv_site_packages)
            | ternary("--system-site-packages", "") }} \
@@ -15,13 +15,8 @@
         packages_python_bin_suffix: >-
           {{ (ansible_facts.python.version.major is version("3", "<"))
              | ternary("", ansible_facts.python.version.major | string) }}
-        packages_virtualenv_bin_suffix: >-
-          {{ (ansible_facts.python.version.major is version("3", "<"))
-             | ternary("", "-" + ansible_facts.python.version.major | string) }}
         ansible_python_interpreter: >-
           /usr/bin/python{{ packages_python_bin_suffix }}
-        virtualenv_command: >-
-          /usr/bin/virtualenv{{ packages_virtualenv_bin_suffix }}
   tags:
     - role::packages
     - role::packages::python
