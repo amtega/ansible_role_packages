@@ -2,16 +2,27 @@
 # Setup operating system packages tasks
 
 - block:
-    - block:
-        - name: Setup package manager python bindings
-          apt:
-            name: python-apt
-            state: present
+      # This is a workaround to avoid a warning with debian in ansible 2.8
 
-        - name: Setup aptitude
-          apt:
-            name: aptitude
-            state: present
+    - block:
+        - name: Gather packages facts
+          command: dpkg -l | awx '{ print $2 }'
+          register: packages_debian_list_packages_result
+
+        - block:
+            - name: Updata packages cache
+              command: /usr/bin/apt-get update
+
+            - name: Setup aptitude and package manager python bindings
+              command: >-
+                /usr/bin/apt-get install --no-install-recommends \
+                aptitude python-apt -y -q
+          when: >-
+            "aptitude" not in packages_installed_debian
+            or "python-apt" not in packages_installed_debian
+          vars:
+            packages_installed_debian: >-
+              {{ packages_debian_list_packages_result.stdout_lines }}
       when: ansible_facts.os_family | lower == "debian"
 
     - name: Get operating system packages facts
