@@ -6,17 +6,24 @@
 
     - block:
         - name: Gather packages facts
-          command: dpkg -l | awx '{ print $2 }'
+          shell: dpkg -l | awk '{ print $2 }'
+          changed_when: no
+          args:
+            warn: no
           register: packages_debian_list_packages_result
 
         - block:
             - name: Updata packages cache
               command: /usr/bin/apt-get update
+              args:
+                warn: no
 
             - name: Setup aptitude and package manager python bindings
               command: >-
                 /usr/bin/apt-get install --no-install-recommends \
                 aptitude python-apt -y -q
+              args:
+                warn: no
           when: >-
             "aptitude" not in packages_installed_debian
             or "python-apt" not in packages_installed_debian
