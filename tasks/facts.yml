@@ -10,6 +10,7 @@
     - name: Point python virtualenv facts
       set_fact:
         ansible_python_interpreter: "{{ packages_ansible_python_interpreter }}"
+        packages_python_virtualenv_dir: "{{ packages_python_virtualenv}}/"
         packages_python_bin_dir: >-
           {{ packages_ansible_python_interpreter | dirname }}/
       when: packages_stat_python_result.stat.exists
@@ -21,3 +22,4 @@
       {{ packages_python_virtualenv }}/bin/python
   tags:
     - role::packages
+    - role::packages::facts

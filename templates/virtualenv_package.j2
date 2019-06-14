@@ -1,6 +1,6 @@
 {%- if ansible_facts.python.version.major is version("3", "<") %}
 {%- set suffix = "" %}
 {%- else %}
-{%- set suffix = "-" + ansible_facts.python.version.major | string %}
+{%- set suffix = ansible_facts.python.version.major | string %}
 {%- endif %}
 python{{ suffix }}-virtualenv

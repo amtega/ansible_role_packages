@@ -3,10 +3,7 @@
 
 - block:
     - name: Get python packages facts
-      shell: >-
-        {{ packages_python_bin_dir }}pip list
-      args:
-        warn: no
+      command: "{{ packages_python_bin_dir }}pip list"
       changed_when: no
       when: packages_python is not none
       register: packages_get_python_facts_result
@@ -19,8 +16,7 @@
           {{ package.virtualenv | default(omit) }}
         virtualenv_command: >-
           {{ package.virtualenv_command
-             | default(lookup("template", "virtualenv_command.j2"))
-             | trim }}
+             | default("virtualenv") }}
         virtualenv_python: >-
           {{ package.virtualenv_python
              | default(omit) }}

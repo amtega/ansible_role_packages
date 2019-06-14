@@ -10,6 +10,8 @@ The role setups the followin facts:
 
 - `ansible_python_interpreter`: python interpreter in the virtualenv. Only available if the virtualenv is configured,there are python packages and role variable `packages_python_set_ansible_interpreter` is enabled
 
+- `packages_python_virtualenv_dir`: directory (ending with /) containing python virtualenv used by the role. Only available if the virtualenv is configured and there are python packages
+
 - `packages_python_bin_dir`: directory (ending with /) containing the binaries of the virtualenv used by the role. Only available if the virtualenv is configured and there are python packages
 
 ## Modules

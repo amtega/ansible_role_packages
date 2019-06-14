@@ -1,5 +1,0 @@
-{%- if ansible_facts.distribution | lower == "fedora" %}
-virtualenv-{{ ansible_facts.python.version.major | string }}
-{%- else %}
-virtualenv
-{%- endif %}
