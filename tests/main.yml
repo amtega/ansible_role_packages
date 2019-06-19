@@ -5,15 +5,17 @@
   hosts: localhost
   roles:
     - role: amtega.docker_presets
-      docker_presets_images_json_query: >-
-        [? starts_with(name, `centos-6`)
-           || starts_with(name, `centos-7`)
-           || starts_with(name, `debian-9`)
-           || starts_with(name, `fedora-29`)
-           || starts_with(name, `fedora-30`) ]
+      vars:
+        docker_presets_images_json_query: >-
+          [? starts_with(name, `centos-6`)
+             || starts_with(name, `centos-7`)
+             || starts_with(name, `debian-9`)
+             || starts_with(name, `fedora-29`)
+             || starts_with(name, `fedora-30`) ]
 
     - role: amtega.docker_sandbox
-      docker_sandbox_state: started
+      vars:
+        docker_sandbox_state: started
   tags:
     - sandbox
 
@@ -84,7 +86,8 @@
   hosts: localhost
   roles:
     - role: amtega.docker_sandbox
-      docker_sandbox_state: absent
+      vars:
+        docker_sandbox_state: absent
   tags:
     - cleanup
     - sandbox
