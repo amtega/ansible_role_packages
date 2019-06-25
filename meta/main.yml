@@ -69,7 +69,12 @@ dependencies:
       select_hostvars_query:
         pattern: "^packages_python_.*"
         exclude_pattern: >-
-          ^packages_python_(virtualenv|extra_args|set_ansible_interpreter).*$
+          {{ "^packages_python_("
+             + "virtualenv|"
+             + "extra_args|"
+             + "set_ansible_interpreter|"
+             + "bin_dir"
+             + ").*$" }}
         fact_name: packages_python_hostvars
         output_type: list
     when: packages_python_load_from_hostvars | bool
