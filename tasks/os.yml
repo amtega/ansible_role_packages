@@ -13,7 +13,7 @@
           register: packages_debian_list_packages_result
 
         - block:
-            - name: Updata packages cache
+            - name: Update packages cache
               command: /usr/bin/apt-get update
               args:
                 warn: no
