@@ -3,15 +3,16 @@
 
 - include_tasks: os.yml
   when: >-
-    packages_os is not none
-    or packages_python is not none
+    packages_os.keys() | list | length > 0
+    or packages_python.keys() | list | length > 0
+    or packages_os_load_from_hostvars | bool
   tags:
     - role::packages
     - role::packages::os
 
 - include_tasks: venv.yml
   when:
-    - packages_python is not none
+    - packages_python.keys() | list | length > 0
     - packages_python_virtualenv is defined
     - packages_python_virtualenv | length > 0
   tags:
@@ -20,7 +21,7 @@
 
 - include_tasks: facts.yml
   when:
-    - packages_python is not none
+    - packages_python.keys() | list | length > 0
     - packages_python_virtualenv is defined
     - packages_python_virtualenv | length > 0
     - packages_python_set_ansible_interpreter | bool
@@ -28,7 +29,9 @@
     - role::packages
 
 - include_tasks: python.yml
-  when: packages_python is not none
+  when: >-
+    packages_python.keys() | list | length > 0
+    or packages_python_load_from_hostvars | bool
   tags:
     - role::packages
     - role::packages::python

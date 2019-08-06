@@ -50,7 +50,7 @@ dependencies:
   - role: amtega.epel
     when:
       - ansible_facts.distribution | lower in ["rhel", "centos"]
-      - packages_python is not none
+      - packages_python.keys() | list | length > 0
     tags:
       - role::packages
 
