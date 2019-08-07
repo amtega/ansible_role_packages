@@ -28,28 +28,19 @@ galaxy_info:
     - python
 
 dependencies:
-  # - role: amtega.check_platform
-  #   vars:
-  #     check_platform_distributions:
-  #       centos: 6
-  #       fedora: 29
-  #       rhel: 6
-  #   tags:
-  #     - role::packages
+  - role: amtega.check_platform
+    vars:
+      check_platform_distributions:
+        centos: 6
+        fedora: 29
+        rhel: 6
 
   - role: amtega.proxy_client
     vars:
       proxy_client_permanent: no
     tags:
       - role::packages
-  #
-  # - role: amtega.epel
-  #   when:
-  #     - ansible_facts.distribution | lower in ["rhel", "centos"]
-  #     - packages_python.keys() | list | length > 0
-  #   tags:
-  #     - role::packages
-  #
+
   - role: amtega.select_hostvars
     vars:
       select_hostvars_query:
@@ -57,8 +48,6 @@ dependencies:
         fact_name: packages_os_hostvars
         output_type: list
     when: packages_os_load_from_hostvars | bool
-    tags:
-      - role::packages
 
   - role: amtega.select_hostvars
     vars:
@@ -74,5 +63,10 @@ dependencies:
         fact_name: packages_python_hostvars
         output_type: list
     when: packages_python_load_from_hostvars | bool
-    tags:
-      - role::packages
+
+  - role: amtega.epel
+    when:
+      - ansible_facts.distribution | lower in ["rhel", "centos"]
+      - >-
+        packages_python.keys() | list | length > 0
+        or packages_python_hostvars | default([]) | list | length > 0
