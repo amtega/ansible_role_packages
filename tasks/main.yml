@@ -1,14 +1,14 @@
 ---
 # Role tasks
 
-- include_tasks: os.yml
-  when: >-
-    packages_os.keys() | list | length > 0
-    or packages_python.keys() | list | length > 0
-    or packages_os_load_from_hostvars | bool
-  tags:
-    - role::packages
-    - role::packages::os
+# - include_tasks: os.yml
+#   when: >-
+#     packages_os.keys() | list | length > 0
+#     or packages_python.keys() | list | length > 0
+#     or packages_os_load_from_hostvars | bool
+#   tags:
+#     - role::packages
+#     - role::packages::os
 
 - include_tasks: venv.yml
   when:

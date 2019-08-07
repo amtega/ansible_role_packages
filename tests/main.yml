@@ -9,7 +9,6 @@
         docker_presets_images_json_query: >-
           [? starts_with(name, `centos-6`)
              || starts_with(name, `centos-7`)
-             || starts_with(name, `debian-9`)
              || starts_with(name, `fedora-29`)
              || starts_with(name, `fedora-30`) ]
 
@@ -52,16 +51,13 @@
                 state: present
               - tomcat: present
           fedora:
-            27:
+            29:
               httpd: present
               tomcat: present
-            28:
+            30:
               httpd: present
               tomcat: present
         packages_python:
-          debian:
-            9:
-              "pexpect>=3.3": present
           centos:
             6:
               - "pexpect>=3.3": present
@@ -69,14 +65,44 @@
             7:
               "pexpect>=3.3": present
           fedora:
-            27:
+            29:
               - name: "pexpect>=3.3"
                 state: present
                 pip_extra_args: "--upgrade"
                 virtualenv: ~/.ansible_venv
                 virtualenv_site_packages: no
-            28:
+            30:
               "pexpect>=3.3": present
+  tasks:
+    # - name: Get operating system packages facts
+    #   package_facts:
+    #
+    # - debug: var=packages
+    #   vars:
+    #     packages: "{{ ansible_facts.packages.keys() | list }}"
+    #
+    # - name: Check operating system packages
+    #   assert:
+    #     that:
+    #       [ "httpd", "lynx", "telnet", "tomcat" ] is subset(packages)
+    #   vars:
+    #     packages: "{{ ansible_facts.packages.keys() | list }}"
+
+    - name: Get python packages facts
+      command: "{{ packages_python_bin_dir }}pip list"
+      changed_when: no
+      register: pip_result
+
+    - name: Check python packages
+      assert:
+        that:
+          - pip_output is search("pexpect")
+          - >-
+            not ansible_facts.distribution_major_version is ("7". "==")
+            or pip_output is search("lxml")
+      vars:
+        pip_output: "{{ pip_result.stdout }}"
+
   vars:
     package_name: "httpd"
   tags:

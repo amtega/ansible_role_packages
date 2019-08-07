@@ -28,25 +28,56 @@
 {% endif %}
 {%- endmacro -%}
 
+{% set distro_name = ansible_facts.distribution | lower %}
+{% set distro_version = ansible_facts.distribution_major_version
+                        | string
+                        | lower %}
+
 {% if packages_spec_hostvars | length > 0%}
-{% set packages_spec = packages_spec | combine(packages_spec_hostvars) %}
+{% set packages_spec = packages_spec | combine(packages_spec_hostvars, recursive=true) %}
 {% endif %}
 
-{% set ns = namespace(found=false) %}
-{% if packages_spec is not none %}
-{% for distro in packages_spec.keys() | list %}
-{% if distro | lower == ansible_facts.distribution | lower
-      or distro | lower == "all" %}
-{% for release in packages_spec[distro] %}
-{% if release | string | lower == ansible_facts.distribution_major_version
-                                  | string
-                                  | lower
-      or release | string | lower == "all" %}
+{% if packages_spec["all"] is defined
+      and packages_spec["all"]["all"] is defined %}
+{% set packages_all_all = packages_spec["all"]["all"] %}
+{% else %}
+{% set packages_all_all = [] %}
+{% endif %}
 
-{% if packages_spec[distro][release] is iterable
-      and packages_spec[distro][release] is not string
-      and packages_spec[distro][release] is not mapping  %}
-{% for package in packages_spec[distro][release] %}
+{% if packages_spec["all"] is defined
+      and packages_spec["all"][distro_version] is defined %}
+{% set packages_all_version = packages_spec["all"][distro_version] %}
+{% else %}
+{% set packages_all_version = [] %}
+{% endif %}
+
+{% if packages_spec[distro_name] is defined
+      and packages_spec[distro_name]["all"] is defined %}
+{% set packages_distro_all = packages_spec[distro_name]["all"] %}
+{% else %}
+{% set packages_distro_all = [] %}
+{% endif %}
+
+{% if packages_spec[distro_name] is defined
+      and packages_spec[distro_name][distro_version] is defined %}
+
+{% set packages_distro_version = packages_spec[distro_name][distro_version] %}
+{% else %}
+{% set packages_distro_version = [] %}
+{% endif %}
+
+{% set packages_specs_to_process = [ packages_all_all ]
+                                   + [ packages_all_version ]
+                                   + [ packages_distro_all ]
+                                   + [ packages_distro_version]  %}
+
+{% set ns = namespace(found=false) %}
+
+{% for spec in packages_specs_to_process %}
+{% if spec is iterable
+      and spec is not string
+      and spec is not mapping  %}
+{% for package in spec %}
 {% set package_name = package.name | default(package.keys() | list | first) %}
 {% set package_state = package.state | default(package.values() | list | first) %}
 {% set package_virtualenv = package.virtualenv | default(packages_python_virtualenv) | default(none) %}
@@ -57,17 +88,14 @@
 {{ package_dict(package_name, package_state, package_virtualenv, package_virtualenv_command, package_virtualenv_python, package_virtualenv_site_packages, package_extra_args) }}
 {% endfor %}
 {% else %}
-{% for package in packages_spec[distro][release] %}
+{% for package in spec %}
 {% set package_name = package %}
-{% set package_state = packages_spec[distro][release][package] %}
+{% set package_state = spec[package] %}
 {{ package_dict(package_name, package_state, packages_extra_args | default(none)) }}
 {% endfor %}
 {% endif %}
-{% endif %}
 {% endfor %}
-{% endif %}
-{% endfor %}
-{% endif %}
+
 {% if not ns.found %}
 []
 {% endif %}
