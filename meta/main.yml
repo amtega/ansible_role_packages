@@ -11,9 +11,6 @@ galaxy_info:
   license: GPLv3 or EUPL
   min_ansible_version: 2.7
   platforms:
-    - name: Debian
-      versions:
-        - stretch
     - name: EL
       versions:
         - 6
@@ -31,29 +28,28 @@ galaxy_info:
     - python
 
 dependencies:
-  - role: amtega.check_platform
-    vars:
-      check_platform_distributions:
-        centos: 6
-        debian: 9
-        fedora: 29
-        rhel: 6
-    tags:
-      - role::packages
+  # - role: amtega.check_platform
+  #   vars:
+  #     check_platform_distributions:
+  #       centos: 6
+  #       fedora: 29
+  #       rhel: 6
+  #   tags:
+  #     - role::packages
 
   - role: amtega.proxy_client
     vars:
       proxy_client_permanent: no
     tags:
       - role::packages
-
-  - role: amtega.epel
-    when:
-      - ansible_facts.distribution | lower in ["rhel", "centos"]
-      - packages_python is not none
-    tags:
-      - role::packages
-
+  #
+  # - role: amtega.epel
+  #   when:
+  #     - ansible_facts.distribution | lower in ["rhel", "centos"]
+  #     - packages_python.keys() | list | length > 0
+  #   tags:
+  #     - role::packages
+  #
   - role: amtega.select_hostvars
     vars:
       select_hostvars_query:

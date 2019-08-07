@@ -62,7 +62,7 @@
 #    ...
 # }
 
-packages_os:
+packages_os: {}
 
 # Dictionary with the python packages to manage for each distribution name/major
 # release combination. The structure of the dict is the same that for the
@@ -100,7 +100,7 @@ packages_os:
 #    ...
 # }
 
-packages_python:
+packages_python: {}
 
 
 # Global extra arguments for the python pip tool if no other ones are specified

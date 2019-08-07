@@ -5,8 +5,17 @@
     - name: Get python packages facts
       command: "{{ packages_python_bin_dir }}pip list"
       changed_when: no
-      when: packages_python is not none
+      when: packages_python.keys() | list | length > 0
       register: packages_get_python_facts_result
+
+    - debug: var=packages_python
+
+    - debug: msg="{{ packages_to_manage }}"
+      vars:
+        packages_to_manage: >-
+          {{ lookup('template', 'packages.yml.j2')  }}
+
+    - fail:
 
     - name: Setup python packages
       pip:

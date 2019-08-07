@@ -83,7 +83,7 @@
 
     packages_to_manage: >-
       {{ lookup('template', 'packages.yml.j2') | from_yaml
-         + (packages_python is not none)
+         + (packages_python.keys() | list | length > 0)
             | ternary(python_extra_packages, []) }}
 
     packages_already_managed: "{{ packages_os_managed | default([]) }}"
