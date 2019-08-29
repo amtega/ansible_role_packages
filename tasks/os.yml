@@ -1,7 +1,7 @@
 ---
 # Setup operating system packages tasks
 
-- block:    
+- block:
     - name: Get operating system packages facts
       package_facts:
 

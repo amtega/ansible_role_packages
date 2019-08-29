@@ -100,7 +100,6 @@
       changed_when: no
       register: pip_result
 
-
     - name: Get python packages facts in custon virtualal environment
       command: "~/.ansible_venv/bin/pip list"
       changed_when: no

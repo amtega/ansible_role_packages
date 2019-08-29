@@ -33,6 +33,7 @@
                         | string
                         | lower %}
 
+{% set packages_spec = packages_spec | to_json | from_json %}
 {% if packages_spec_hostvars | length > 0 %}
 {% set packages_spec = packages_spec | to_json | from_json | combine(packages_spec_hostvars, recursive=true) %}
 {% endif %}
