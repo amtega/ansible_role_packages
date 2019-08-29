@@ -96,12 +96,12 @@
         packages: "{{ ansible_facts.packages.keys() | list }}"
 
     - name: Get python packages facts
-      command: "{{ packages_python_bin_dir }}pip list --format=legacy"
+      command: "{{ packages_python_bin_dir }}pip list"
       changed_when: no
       register: pip_result
 
     - name: Get python packages facts in custon virtualal environment
-      command: "~/.ansible_venv/bin/pip list --format=legacy"
+      command: "~/.ansible_venv/bin/pip list"
       changed_when: no
       when: ansible_facts.distribution_major_version is version("29", "==")
       register: pip_venv_result
