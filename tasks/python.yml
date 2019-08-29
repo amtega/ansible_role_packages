@@ -2,17 +2,17 @@
 # Setup python packages tasks
 
 - block:
-    - include_role:
-        name: amtega.epel
-      when:
-        - ansible_facts.distribution | lower in ["rhel", "centos"]
-        - packages_to_manage | length > 0
-
     - name: Get python packages facts
       command: "{{ packages_python_bin_dir }}pip list"
       changed_when: no
       when: packages_python.keys() | list | length > 0
       register: packages_get_python_facts_result
+
+    - include_role:
+        name: amtega.epel
+      when:
+        - ansible_facts.distribution | lower in ["rhel", "centos"]
+        - packages_to_manage | length > 0
 
     - name: Setup python packages
       pip:
@@ -50,8 +50,7 @@
 
     packages_already_present: >-
       {{ packages_get_python_facts_result.stdout_lines
-         | default([])
-         | map("regex_replace", "(.*) \(.*\)", "\1")
+         | map(attribute="name")
          | list }}
 
     packages_spec: "{{ packages_python }}"
