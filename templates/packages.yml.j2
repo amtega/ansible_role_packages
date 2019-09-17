@@ -35,7 +35,7 @@
 
 {% set packages_spec = packages_spec | to_json | from_json %}
 {% if packages_spec_hostvars | length > 0 %}
-{% set packages_spec = packages_spec | to_json | from_json | combine(packages_spec_hostvars, recursive=true) %}
+{% set packages_spec = ([ packages_spec | to_json | from_json ] + packages_spec_hostvars) | packages_combine_specs %}
 {% endif %}
 
 {% if packages_spec["all"] is defined
