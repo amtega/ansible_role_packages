@@ -16,7 +16,6 @@ def packages_normalize_spec(spec):
     for distribution in spec:
         for release in spec[distribution]:
             item = spec[distribution][release]
-
             normalized_items = []
             if isinstance(item, dict):
                 for package in item:
@@ -27,14 +26,19 @@ def packages_normalize_spec(spec):
             if isinstance(item, list):
                 for subitem in item:
                     if len(subitem.keys()) == 1:
-                        normalized_item = {"name": subitem.keys()[0],
-                                           "state": subitem.values()[0]}
+                        normalized_item = {"name": list(subitem.keys())[0],
+                                           "state": list(subitem.values())[0]}
                         normalized_items.append(normalized_item)
                     else:
                         normalized_items.append(subitem)
 
-            normalized_spec[distribution] = {}
-            normalized_spec[distribution][release] = normalized_items
+            if distribution not in normalized_spec.keys():
+                normalized_spec[distribution] = {}
+
+            if release not in normalized_spec[distribution]:
+                normalized_spec[distribution][release] = normalized_items
+            else:
+                normalized_spec[distribution][release] += normalized_items
 
     return normalized_spec
 
