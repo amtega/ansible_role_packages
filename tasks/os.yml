@@ -5,6 +5,10 @@
     - name: Get operating system packages facts
       package_facts:
 
+    - include_role:
+        name: amtega.epel
+      when: packages_python.keys() | list | length > 0
+
     - name: Setup operating system packages
       package:
         name: "{{ package.name }}"

@@ -1,27 +1,70 @@
 ---
 # Role tasks
 
-- include_tasks: os.yml
+- include_role:
+    name: amtega.check_platform
+  vars:
+    check_platform_distributions:
+      centos: 6
+      fedora: 29
+      rhel: 6
+
+- include_role:
+    name: amtega.proxy_client
+  vars:
+    proxy_client_permanent: no
+
+- include_role:
+    name: amtega.select_hostvars
+  vars:
+    select_hostvars_query:
+      pattern: "^packages_os_.*"
+      exclude_pattern: >-
+        {{ "^packages_os_("
+           + "load_from_hostvars|"
+           + "managed"
+           + ").*$" }}
+      fact_name: packages_os_hostvars
+      output_type: list
+  when: packages_os_load_from_hostvars | bool
+
+- include_role:
+    name: amtega.select_hostvars
+  vars:
+    select_hostvars_query:
+      pattern: "^packages_python_.*"
+      exclude_pattern: >-
+        {{ "^packages_python_("
+           + "load_from_hostvars|"
+           + "virtualenv|"
+           + "extra_args|"
+           + "set_ansible_interpreter|"
+           + "bin_dir|"
+           + "managed"
+           + ").*$" }}
+      fact_name: packages_python_hostvars
+      output_type: list
+  when: packages_python_load_from_hostvars | bool
+
+- name: Run operating system packages tasks
+  include_tasks: os.yml
   when: >-
     packages_os.keys() | list | length > 0
     or packages_python.keys() | list | length > 0
     or packages_os_load_from_hostvars | bool
-  tags:
-    - role::packages
-    - role::packages::os
 
-- include_tasks: venv.yml
+- name: Run python virtualenv tasks
+  include_tasks: venv.yml
   when:
     - >-
       packages_python.keys() | list | length > 0
       or packages_python_hostvars | default([]) | list | length > 0
     - packages_python_virtualenv is defined
     - packages_python_virtualenv | length > 0
-  tags:
-    - role::packages
-    - role::packages::python
+    - packages_setup_python_virtualenv_result is undefined
 
-- include_tasks: facts.yml
+- name: Run facts gathering tasks
+  include_tasks: facts.yml
   when:
     - >-
       packages_python.keys() | list | length > 0
@@ -29,13 +72,12 @@
     - packages_python_virtualenv is defined
     - packages_python_virtualenv | length > 0
     - packages_python_set_ansible_interpreter | bool
-  tags:
-    - role::packages
+    - >-
+      (packages_python_virtualenv_dir is undefined
+       or packages_python_bin_dir is undefined)
 
-- include_tasks: python.yml
+- name: Run pyhton packages tasks
+  include_tasks: python.yml
   when: >-
     packages_python.keys() | list | length > 0
     or packages_python_hostvars | default([]) | list | length > 0
-  tags:
-    - role::packages
-    - role::packages::python
