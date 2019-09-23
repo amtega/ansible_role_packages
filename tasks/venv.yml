@@ -11,6 +11,7 @@
         {{ packages_python_virtualenv }}
       args:
         creates: "{{ packages_python_virtualenv }}"
+      register: packages_setup_python_virtualenv_result
       vars:
         packages_python_bin_suffix: >-
           {{ (ansible_facts.python.version.major is version("3", "<"))
