@@ -16,7 +16,6 @@
 
 - include_role:
     name: amtega.epel
-  when: packages_python.keys() | list | length > 0
 
 - include_role:
     name: amtega.select_hostvars
