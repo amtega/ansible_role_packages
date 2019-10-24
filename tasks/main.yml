@@ -15,6 +15,9 @@
     proxy_client_permanent: no
 
 - include_role:
+    name: amtega.epel
+
+- include_role:
     name: amtega.select_hostvars
   vars:
     select_hostvars_query:
