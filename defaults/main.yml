@@ -124,6 +124,12 @@ packages_python_virtualenv_site_packages: yes
 
 packages_python_set_ansible_interpreter: yes
 
+# Dict with distribution aliases. Before comparing ansible_facts distribution
+# name against the required distribution, this map will be applied.
+
+packages_distribution_aliases:
+  redhat: rhel
+
 # Indicate packages must be loaded also from host variables. See
 # `packages_os_load_from_hostvars` and `packages_python_load_from_hostvars`
 # variables below for details

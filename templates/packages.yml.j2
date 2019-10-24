@@ -28,7 +28,8 @@
 {% endif %}
 {%- endmacro -%}
 
-{% set distro_name = ansible_facts.distribution | lower %}
+{% set distro_name_lower = ansible_facts.distribution | lower %}
+{% set distro_name = packages_distribution_aliases[distro_name_lower] | default(distro_name_lower) | lower %}
 {% set distro_version = ansible_facts.distribution_major_version
                         | string
                         | lower %}

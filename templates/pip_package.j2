@@ -1,4 +1,5 @@
-{%- if ansible_facts.distribution | lower == "fedora" %}
+{% set distro_name_lower = ansible_facts.distribution | lower %}
+{%- if packages_distribution_aliases[distro_name_lower] | default(distro_name_lower) | lower == "fedora" %}
 python{{ ansible_facts.python.version.major | string }}-pip
 {%- else %}
 python-pip
