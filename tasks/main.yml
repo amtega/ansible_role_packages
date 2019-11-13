@@ -7,7 +7,7 @@
     check_platform_distributions:
       centos: 6
       fedora: 29
-      rhel: 6
+      redhat: 6
 
 - include_role:
     name: amtega.proxy_client
