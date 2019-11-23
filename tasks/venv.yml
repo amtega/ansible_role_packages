@@ -5,7 +5,8 @@
     - name: Setup python virtualenv
       command: >-
         /usr/bin/virtualenv \
-        --python={{ ansible_python_interpreter }} \
+        --python={{ packages_python_virtualenv_python
+                    | default(ansible_python_interpreter) }} \
         {{ (packages_python_virtualenv_site_packages)
            | ternary("--system-site-packages", "") }} \
         {{ packages_python_virtualenv }}
