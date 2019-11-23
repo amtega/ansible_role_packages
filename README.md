@@ -6,7 +6,7 @@ This is an [Ansible](http://www.ansible.com) role to manage different package se
 
 A list of all the default variables for this role is available in `defaults/main.yml`.
 
-The role setups the followin facts:
+The role setups the following facts:
 
 - `ansible_python_interpreter`: python interpreter in the virtualenv. Only available if the virtualenv is configured,there are python packages and role variable `packages_python_set_ansible_interpreter` is enabled
 
