@@ -102,7 +102,6 @@ packages_os: {}
 
 packages_python: {}
 
-
 # Global extra arguments for the python pip tool if no other ones are specified
 # in the package config. See `packages_python` documentation before
 #
