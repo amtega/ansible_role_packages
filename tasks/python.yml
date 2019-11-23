@@ -11,13 +11,17 @@
     - block:
         - name: Get python packages facts
           shell: >
-            {{ packages_python_bin_dir | default("")
-               + "pip list | awk '{ print $1 };'" }}
+            {{ packages_pip_dir + "pip list | awk '{ print $1 };'" }}
           args:
             warn: no
           changed_when: no
           when: packages_python.keys() | list | length > 0
           register: packages_get_python_facts_result
+          vars:
+            packages_pip_dir: >-
+              {{ (packages_python_virtualenv | default("") | length > 0)
+                 | ternary(packages_python_virtualenv + "/bin/",
+                           packages_python_bin_dir) }}
 
         - name: Setup python packages
           pip:
