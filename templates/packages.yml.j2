@@ -28,8 +28,8 @@
 {% endif %}
 {%- endmacro -%}
 
-{% set distro_name_lower = ansible_facts.distribution | lower %}
-{% set distro_name = packages_distribution_aliases[distro_name_lower] | default(distro_name_lower) | lower %}
+{% set distro_name = ansible_facts.distribution | lower %}
+{% set distro_name_alias = packages_distribution_aliases[distro_name] | default(distro_name) | lower %}
 {% set distro_version = ansible_facts.distribution_major_version
                         | string
                         | lower %}
@@ -53,17 +53,19 @@
 {% set packages_all_version = [] %}
 {% endif %}
 
-{% if packages_spec[distro_name] is defined
-      and packages_spec[distro_name]["all"] is defined %}
-{% set packages_distro_all = packages_spec[distro_name]["all"] %}
+{% set packages_specs_to_apply = packages_spec[distro_name] | default(packages_spec[distro_name_alias]) | default(none) %}
+
+{% if not packages_specs_to_apply is none
+      and packages_specs_to_apply["all"] is defined %}
+{% set packages_distro_all = packages_specs_to_apply["all"] %}
 {% else %}
 {% set packages_distro_all = [] %}
 {% endif %}
 
-{% if packages_spec[distro_name] is defined
-      and packages_spec[distro_name][distro_version] is defined %}
+{% if not packages_specs_to_apply is none
+      and packages_specs_to_apply[distro_version] is defined %}
 
-{% set packages_distro_version = packages_spec[distro_name][distro_version] %}
+{% set packages_distro_version = packages_specs_to_apply[distro_version] %}
 {% else %}
 {% set packages_distro_version = [] %}
 {% endif %}
