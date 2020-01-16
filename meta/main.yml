@@ -29,17 +29,42 @@ galaxy_info:
 
 dependencies:
   - role: amtega.check_platform
-    tags:
-      - never
+    vars:
+      check_platform_distributions:
+        centos: 6
+        fedora: 29
+        redhat: 6
 
   - role: amtega.proxy_client
-    tags:
-      - never
+    vars:
+      proxy_client_permanent: no
 
   - role: amtega.select_hostvars
-    tags:
-      - never
+    vars:
+      select_hostvars_query:
+        pattern: "^packages_os_.*"
+        exclude_pattern: >-
+          {{ "^packages_os_("
+             + "load_from_hostvars|"
+             + "managed"
+             + ").*$" }}
+        fact_name: packages_os_hostvars
+        output_type: list
+    when: packages_os_load_from_hostvars | bool
 
-  - role: amtega.epel
-    tags:
-      - never
+  - role: amtega.select_hostvars
+    vars:
+      select_hostvars_query:
+        pattern: "^packages_python_.*"
+        exclude_pattern: >-
+          {{ "^packages_python_("
+             + "load_from_hostvars|"
+             + "virtualenv|"
+             + "extra_args|"
+             + "set_ansible_interpreter|"
+             + "bin_dir|"
+             + "managed"
+             + ").*$" }}
+        fact_name: packages_python_hostvars
+        output_type: list
+    when: packages_python_load_from_hostvars | bool
