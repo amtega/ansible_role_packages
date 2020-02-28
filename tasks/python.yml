@@ -28,18 +28,24 @@
             name: "{{ package.name }}"
             state: "{{ package.state }}"
             virtualenv: >-
-              {{ package.virtualenv | default(omit) }}
+              {{ package.virtualenv
+                 | default(packages_python_virtualenv)
+                 | default(omit) }}
             virtualenv_command: >-
               {{ package.virtualenv_command
+                 | default(packages_python_virtualenv_command)
                  | default("virtualenv") }}
             virtualenv_python: >-
               {{ package.virtualenv_python
+                 | default(packages_python_virtualenv_python)
                  | default(omit) }}
             virtualenv_site_packages: >-
               {{ package.virtualenv_site_packages
+                 | default(packages_python_virtualenv_site_packages)
                  | default(omit) }}
             extra_args: >-
               {{ package.extra_args
+                 | default(packages_python_extra_args)
                  | default(omit) }}
           loop: "{{ packages_to_manage }}"
           loop_control:
