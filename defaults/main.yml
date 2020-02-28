@@ -74,7 +74,7 @@ packages_os: {}
 # - `virtualenv`
 # - `virtualenv_command`
 # - `virtualenv_site_packages`
-# - `pip_extra_args`
+# - `extra_args`
 #
 # {
 #   <distribution name 1>:
