@@ -23,7 +23,7 @@
       set_fact:
         packages_os_managed: >-
           {{ packages_os_managed | default([]) + packages_to_manage }}
-  environment: "{{ proxy_client_environment }}"
+  environment: "{{ proxy_client_environment | default({}) }}"
   vars:
     pip_package: >-
       {{ lookup("template", "pip_package.j2") | trim }}
