@@ -1,0 +1,19 @@
+{% set package_groups_info = packages_groups_result.stdout_lines
+                             | reject("search", "Loaded plugins:.*")
+                             | reject("search", "Done")
+                             | map("regex_replace", "^([a-zA-Z].*):$", "\\1:")
+                             | map("regex_replace", "   (.*)$", "  - \\1")
+                             | map("regex_replace", "$", "\\n")
+                             | list
+                             | join
+                             | from_yaml %}
+
+{% set ns = namespace(found=false, groups=[]) %}
+{% for key in package_groups_info.keys() | list %}
+{% if key is search("Installed") %}
+{% set ns.groups = ns.groups + package_groups_info[key] %}
+{% set ns.found = true %}
+{% endif %}
+{% endfor %}
+
+{{ ns.groups | to_json }}

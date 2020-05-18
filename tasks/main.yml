@@ -2,18 +2,18 @@
 # Role tasks
 
 - block:
-    - name: Gather facts
-      setup:
-      when: ansible_facts.keys() | list | length == 0
-      tags:
-        - always
+
+    - include_tasks: gather.yml
+      when: >-
+        ansible_facts.python.version is undefined
 
     - name: Run operating system packages tasks
       include_tasks: os.yml
       when: >-
         packages_os.keys() | list | length > 0
         or packages_python.keys() | list | length > 0
-        or packages_os_load_from_hostvars | bool
+        or (packages_os_load_from_hostvars | bool
+            and packages_os_hostvars | default([]) | length > 0)
       tags:
         - role::packages::os
 
@@ -44,7 +44,7 @@
       tags:
         - always
 
-    - name: Run pyhton packages tasks
+    - name: Run python packages tasks
       include_tasks: python.yml
       when: >-
         packages_python.keys() | list | length > 0

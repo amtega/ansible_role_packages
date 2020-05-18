@@ -1,0 +1,21 @@
+---
+# Gather facts tasks
+
+- block:
+    - name: Gather facts
+      setup:
+      when: ansible_facts.python.version is undefined
+      tags:
+        - role::packages
+
+    - name: Gather operating system packages facts
+      package_facts:
+      when:
+        - ansible_facts.packages is not defined
+        - >-
+          packages_os is defined
+          or packages_os_hostvars is defined
+          or packages_python is defined
+          or packages_python_hostvars is defined
+  tags:
+    - role::packages
