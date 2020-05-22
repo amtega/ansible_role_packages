@@ -1,8 +1,0 @@
----
-# Role gathering tasks
-
-- block:
-    - include_tasks: gather_facts.yml
-
-  tags:
-    - role::packages

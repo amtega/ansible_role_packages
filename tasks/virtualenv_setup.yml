@@ -20,5 +20,4 @@
         ansible_python_interpreter: >-
           /usr/bin/python{{ packages_python_bin_suffix }}
   tags:
-    - role::packages
-    - role::packages::python
+    - always

@@ -1,0 +1,73 @@
+---
+# Setup operating system packages tasks
+
+- block:
+    - include: packages_os_first_run.yml
+      when: _packages_os_managed is undefined
+
+    - name: Setup fact with operating system packages to manage
+      set_fact:
+        _packages_os_to_manage: >-
+          {{ lookup('template', 'packages.yml.j2') | from_yaml }}
+
+    - name: Setup operating system packages
+      package:
+        name: "{{ package.name }}"
+        state: "{{ package.state }}"
+      loop: "{{ _packages_os_to_manage }}"
+      loop_control:
+        loop_var: package
+        label: >-
+          {{ package.name | default('') }} {{ package.state | default('') }}
+
+    - name: Setup fact with operating packages managed
+      set_fact:
+        _packages_os_managed: >-
+          {{ _packages_os_managed | default([]) + _packages_os_to_manage }}
+      when: >-
+        _packages_os_managed is undefined
+        or _packages_os_to_manage | length > 0
+
+  environment: "{{ proxy_client_environment | default({}) }}"
+  vars:
+    python_setup_tools_package: python-setuptools
+
+    python_pip_packages_spec:
+      - name: "{{ _packages_pip_package }}"
+        state: present
+
+    python_setup_tools_packages_spec:
+      - name: "{{ python_setup_tools_package }}"
+        state: present
+
+    python_virtualenv_packages_spec:
+      - name: "{{ _packages_python_virtualenv_package }}"
+        state: present
+
+    python_extra_packages: >-
+      {{ (_packages_pip_package not in ansible_facts.packages.keys() | list)
+         | ternary(python_pip_packages_spec, [])
+         + (python_setup_tools_package
+            not in ansible_facts.packages.keys() | list)
+           | ternary(python_setup_tools_packages_spec, [])
+         + (_packages_python_virtualenv_package
+            not in ansible_facts.packages.keys() | list)
+           | ternary(python_virtualenv_packages_spec, []) }}
+
+    python_extra_packages_spec:
+      all:
+        all: "{{ python_extra_packages }}"
+
+    packages_already_managed: "{{ _packages_os_managed | default([]) }}"
+
+    packages_already_present: >-
+      {{ ansible_facts.packages.keys() | list
+         + _packages_capabilities_present
+         + _packages_groups_present | default([]) }}
+
+    packages_spec: "{{ packages_os }}"
+
+    packages_spec_hostvars: "{{ packages_os_hostvars | default([]) }}"
+  tags:
+    - role::packages
+    - role::packages::os
