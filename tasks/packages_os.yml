@@ -2,18 +2,19 @@
 # Setup operating system packages tasks
 
 - block:
-    - name: Get operating system packages facts
-      package_facts:
+    - include: packages_os_first_run.yml
+      when: _packages_os_managed is undefined
 
-    - include_role:
-        name: amtega.epel
-      when: packages_python.keys() | list | length > 0
+    - name: Setup fact with operating system packages to manage
+      set_fact:
+        _packages_os_to_manage: >-
+          {{ lookup('template', 'packages.yml.j2') | from_yaml }}
 
     - name: Setup operating system packages
       package:
         name: "{{ package.name }}"
         state: "{{ package.state }}"
-      loop: "{{ packages_to_manage }}"
+      loop: "{{ _packages_os_to_manage }}"
       loop_control:
         loop_var: package
         label: >-
@@ -21,20 +22,18 @@
 
     - name: Setup fact with operating packages managed
       set_fact:
-        packages_os_managed: >-
-          {{ packages_os_managed | default([]) + packages_to_manage }}
+        _packages_os_managed: >-
+          {{ _packages_os_managed | default([]) + _packages_os_to_manage }}
+      when: >-
+        _packages_os_managed is undefined
+        or _packages_os_to_manage | length > 0
+
   environment: "{{ proxy_client_environment | default({}) }}"
   vars:
-    pip_package: >-
-      {{ lookup("template", "pip_package.j2") | trim }}
-
     python_setup_tools_package: python-setuptools
 
-    python_virtualenv_package: >-
-      {{ lookup("template", "virtualenv_package.j2") | trim }}
-
     python_pip_packages_spec:
-      - name: "{{ pip_package }}"
+      - name: "{{ _packages_pip_package }}"
         state: present
 
     python_setup_tools_packages_spec:
@@ -42,27 +41,29 @@
         state: present
 
     python_virtualenv_packages_spec:
-      - name: "{{ python_virtualenv_package }}"
+      - name: "{{ _packages_python_virtualenv_package }}"
         state: present
 
     python_extra_packages: >-
-      {{ (pip_package not in ansible_facts.packages.keys() | list)
+      {{ (_packages_pip_package not in ansible_facts.packages.keys() | list)
          | ternary(python_pip_packages_spec, [])
          + (python_setup_tools_package
             not in ansible_facts.packages.keys() | list)
            | ternary(python_setup_tools_packages_spec, [])
-         + (python_virtualenv_package
+         + (_packages_python_virtualenv_package
             not in ansible_facts.packages.keys() | list)
            | ternary(python_virtualenv_packages_spec, []) }}
 
-    packages_to_manage: >-
-      {{ lookup('template', 'packages.yml.j2') | from_yaml
-         + (packages_python.keys() | list | length > 0)
-            | ternary(python_extra_packages, []) }}
+    python_extra_packages_spec:
+      all:
+        all: "{{ python_extra_packages }}"
 
-    packages_already_managed: "{{ packages_os_managed | default([]) }}"
+    packages_already_managed: "{{ _packages_os_managed | default([]) }}"
 
-    packages_already_present: "{{ ansible_facts.packages.keys() | list }}"
+    packages_already_present: >-
+      {{ ansible_facts.packages.keys() | list
+         + _packages_capabilities_present
+         + _packages_groups_present | default([]) }}
 
     packages_spec: "{{ packages_os }}"
 

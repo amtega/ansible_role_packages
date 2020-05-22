@@ -1,0 +1,37 @@
+---
+# Preparation required during role first run within the play
+
+- block:
+    - name: Gather facts
+      setup:
+      when: ansible_facts.python.version is undefined
+
+    - name: Gather operating system packages facts
+      package_facts:
+      when: ansible_facts.packages is not defined
+
+    - include_tasks: packages_os_capabilities.yml
+      when: _packages_capabilities_present is undefined
+
+    - include_tasks: packages_os_groups.yml
+      when:
+        - _packages_groups_present is undefined
+        - ansible_facts.distribution_major_version is version("6", ">")
+
+    - name: Setup fact with pip package
+      set_fact:
+        _packages_pip_package: >-
+          {{ lookup("template", "pip_package.j2") | trim }}
+      when: _packages_pip_package is undefined
+
+    - name: Setup fact with python virtualenv package
+      set_fact:
+        _packages_python_virtualenv_package: >-
+          {{ lookup("template", "virtualenv_package.j2") | trim }}
+      when: _packages_python_virtualenv_package is undefined
+
+    - include_role:
+        name: amtega.epel
+      when: _packages_os_managed is undefined
+  tags:
+    - always

@@ -1,0 +1,62 @@
+---
+# Setup python packages tasks
+
+- block:
+    - include_tasks: virtualenv.yml
+      when: packages_python_virtualenv | default("") | length > 0
+      tags:
+        - always
+
+    - include: packages_python_present.yml
+      when: _packages_python_present is undefined
+
+    - name: Setup fact with python packages to manage
+      set_fact:
+        _packages_python_to_manage: >-
+          {{ lookup('template', 'packages.yml.j2') | from_yaml }}
+
+    - name: Setup python packages
+      pip:
+        name: "{{ package.name }}"
+        state: "{{ package.state }}"
+        virtualenv: >-
+          {{ package.virtualenv
+             | default(packages_python_virtualenv)
+             | default(omit) }}
+        virtualenv_command: >-
+          {{ package.virtualenv_command
+             | default(packages_python_virtualenv_command)
+             | default("virtualenv") }}
+        virtualenv_python: >-
+          {{ package.virtualenv_python
+             | default(packages_python_virtualenv_python)
+             | default(omit) }}
+        virtualenv_site_packages: >-
+          {{ package.virtualenv_site_packages
+             | default(packages_python_virtualenv_site_packages)
+             | default(omit) }}
+        extra_args: >-
+          {{ package.extra_args
+             | default(packages_python_extra_args)
+             | default(omit) }}
+      loop: "{{ _packages_python_to_manage }}"
+      loop_control:
+        loop_var: package
+        label: "{{ package.name }} {{ package.state }}"
+
+    - name: Setup fact with python packages managed
+      set_fact:
+        _packages_python_managed: >-
+          {{ _packages_python_managed | default([]) + _packages_python_to_manage }}
+      when: >-
+        _packages_python_managed is undefined
+        or _packages_python_to_manage | length > 0
+
+  environment: "{{ proxy_client_environment }}"
+  vars:
+    packages_already_managed: "{{ _packages_python_managed | default([]) }}"
+    packages_already_present: "{{ _packages_python_present | default([]) }}"
+    packages_spec: "{{ packages_python }}"
+    packages_spec_hostvars: "{{ packages_python_hostvars | default([]) }}"
+  tags:
+    - role::packages::python

@@ -1,0 +1,51 @@
+---
+
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint:
+  name: yamllint
+platforms:
+  - name: centos6
+    image: centos:6
+    groups:
+      - molecule_hosts
+  - name: centos7
+    image: centos:7
+    groups:
+      - molecule_hosts
+  - name: fedora29
+    image: fedora:29
+    groups:
+      - molecule_hosts
+      - molecule_hosts_fedora
+  - name: fedora30
+    image: fedora:30
+    groups:
+      - molecule_hosts
+      - molecule_hosts_fedora
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      molecule_hosts:
+        ansible_user: root
+        package_name: "httpd"
+        packages_load_from_hostvars: yes
+        packages_os_extra:
+          all:
+            all:
+              lynx: present
+        packages_python_extra:
+          centos:
+            7:
+              lxml: present
+      molecule_hosts_fedora:
+        ansible_python_interpreter: /usr/bin/python3
+  lint:
+    name: ansible-lint
+verifier:
+  name: testinfra
+  lint:
+    name: flake8

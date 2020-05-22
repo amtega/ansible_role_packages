@@ -1,41 +1,8 @@
 ---
-# Tasks for testing role
 
-- name: Setup testing sandbox
-  hosts: localhost
-  roles:
-    - role: amtega.docker_presets
-      vars:
-        docker_presets_images_json_query: >-
-          [? starts_with(name, `centos-6`)
-             || starts_with(name, `centos-7`)
-             || starts_with(name, `fedora-29`)
-             || starts_with(name, `fedora-30`) ]
-
-    - role: amtega.docker_sandbox
-      vars:
-        docker_sandbox_state: started
-  tags:
-    - sandbox
-
-- name: Prepare docker containers for test
-  hosts: docker_sandbox_containers
-  tasks:
-    - name: Setup extra packages
-      set_fact:
-        packages_os_extra:
-          all:
-            all:
-              lynx: present
-        packages_python_extra:
-          centos:
-            7:
-              lxml: present
-  tags:
-    - idempotence
-
-- name: Test packages role
-  hosts: docker_sandbox_containers
+- name: Converge
+  hosts: molecule_hosts
+  gather_facts: no
   roles:
     - role: amtega.packages
       vars:
@@ -120,18 +87,3 @@
           {{ (ansible_facts.distribution_major_version is version("29", "=="))
              | ternary(pip_venv_result.stdout | default(""),
                        pip_result.stdout) }}
-
-  vars:
-    package_name: "httpd"
-  tags:
-    - idempotence
-
-- name: Cleanup testing sandbox
-  hosts: localhost
-  roles:
-    - role: amtega.docker_sandbox
-      vars:
-        docker_sandbox_state: absent
-  tags:
-    - cleanup
-    - sandbox

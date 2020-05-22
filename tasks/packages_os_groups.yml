@@ -1,0 +1,23 @@
+---
+# Gather packages groups tasks
+
+- block:
+    - name: Gather packages groups present
+      command: yum group list
+      args:
+        warn: no
+      changed_when: no
+      failed_when: >-
+        packages_groups_result.rc != 0
+        and not packages_groups_result.stdout is search("subscription-manager")
+      register: packages_groups_result
+      environment:
+        LANGUAGE: en_US
+        LANG: en_US
+
+    - name: Setup fact with packages groups present
+      set_fact:
+        _packages_groups_present: >-
+          {{ lookup("template", "groups.yml.j2") | from_yaml }}
+  tags:
+    - always

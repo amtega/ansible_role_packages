@@ -1,5 +1,5 @@
 ---
-# Role setup facts tasks
+# Role setup python interpreter tasks
 
 - block:
     - name: Check python virtualenv
@@ -7,19 +7,15 @@
         path: "{{ packages_ansible_python_interpreter }}"
       register: packages_stat_python_result
 
-    - name: Point python virtualenv facts
+    - name: Setup python virtualenv facts
       set_fact:
         ansible_python_interpreter: "{{ packages_ansible_python_interpreter }}"
         packages_python_virtualenv_dir: "{{ packages_python_virtualenv }}/"
         packages_python_bin_dir: >-
           {{ packages_ansible_python_interpreter | dirname }}/
       when: packages_stat_python_result.stat.exists
-  when:
-    - packages_python_virtualenv is not none
-    - packages_python_virtualenv | length > 0
   vars:
     packages_ansible_python_interpreter: >-
       {{ packages_python_virtualenv }}/bin/python
   tags:
-    - role::packages
-    - role::packages::facts
+    - always

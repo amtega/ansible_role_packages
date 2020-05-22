@@ -1,12 +1,20 @@
-{%- macro package_dict(name, state, virtualenv=none, virtualenv_command=none, virtualenv_python=none, virtualenv_site_packages=none, extra_args=none) -%}
+{%- macro package_dict(name,
+                       state,
+                       virtualenv=none,
+                       virtualenv_command=none,
+                       virtualenv_python=none,
+                       virtualenv_site_packages=none,
+                       extra_args=none) -%}
 {% set search_already_managed = packages_already_managed
                                 | selectattr("name", "equalto", name)
                                 | list %}
 {% if (search_already_managed | length == 0
        or (search_already_managed | first).state != state)
-      and (state != "present"
-           or (state == "present"
-               and name not in packages_already_present)) %}
+      and ((state == "present"
+            and name not in packages_already_present)
+           or (state == "absent"
+               and name in packages_already_present)
+           or state not in ["absent", "present"]) %}
 {% set ns.found = true %}
 - name: "{{ name }}"
   state: "{{ state }}"
@@ -34,9 +42,13 @@
                         | string
                         | lower %}
 
-{% set packages_spec = packages_spec | to_json | from_json %}
-{% if packages_spec_hostvars | length > 0 %}
-{% set packages_spec = ([ packages_spec | to_json | from_json ] + packages_spec_hostvars) | packages_combine_specs %}
+{% set packages_spec = ([packages_spec | to_json | from_json]
+                        + packages_spec_hostvars | default([]))
+                       | packages_combine_specs %}
+{% if packages_python.keys() | list | length > 0 %}
+{% set packages_spec = ([packages_spec | to_json | from_json]
+                        + [python_extra_packages_spec | default({})])
+                       | packages_combine_specs %}
 {% endif %}
 
 {% if packages_spec["all"] is defined

@@ -1,0 +1,19 @@
+---
+# Gather capabilities tasks
+
+- block:
+    - name: Gather capabilities present
+      shell: rpm -qa --provides | cut -d = -f 1
+      args:
+        warn: no
+      changed_when: no
+      register: packages_provides_result
+
+    - name: Setup fact with capabilites present
+      set_fact:
+        _packages_capabilities_present: >-
+          {{ packages_provides_result.stdout_lines
+             | map("trim")
+             | list }}
+  tags:
+    - always

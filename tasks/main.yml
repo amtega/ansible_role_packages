@@ -2,54 +2,14 @@
 # Role tasks
 
 - block:
-    - name: Gather facts
-      setup:
-      when: ansible_facts.keys() | list | length == 0
+    - include_tasks: packages_os.yml
+      when: packages_os_process_required
       tags:
-        - always
+          - role::packages::os
 
-    - name: Run operating system packages tasks
-      include_tasks: os.yml
-      when: >-
-        packages_os.keys() | list | length > 0
-        or packages_python.keys() | list | length > 0
-        or packages_os_load_from_hostvars | bool
-      tags:
-        - role::packages::os
-
-    - name: Run python virtualenv tasks
-      include_tasks: venv.yml
-      when:
-        - >-
-          packages_python.keys() | list | length > 0
-          or packages_python_hostvars | default([]) | list | length > 0
-        - packages_python_virtualenv is defined
-        - packages_python_virtualenv | length > 0
-        - packages_setup_python_virtualenv_result is undefined
+    - include_tasks: packages_python.yml
       tags:
         - role::packages::python
-
-    - name: Run facts gathering tasks
-      include_tasks: facts.yml
-      when:
-        - >-
-          packages_python.keys() | list | length > 0
-          or packages_python_hostvars | default([]) | list | length > 0
-        - packages_python_virtualenv is defined
-        - packages_python_virtualenv | length > 0
-        - packages_python_set_ansible_interpreter | bool
-        - >-
-          (packages_python_virtualenv_dir is undefined
-           or packages_python_bin_dir is undefined)
-      tags:
-        - always
-
-    - name: Run pyhton packages tasks
-      include_tasks: python.yml
-      when: >-
-        packages_python.keys() | list | length > 0
-        or packages_python_hostvars | default([]) | list | length > 0
-      tags:
-        - role::packages::python
+      when: packages_python_process_required
   tags:
     - role::packages
