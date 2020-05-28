@@ -2,8 +2,16 @@
 # Setup operating system packages tasks
 
 - block:
-    - include: packages_os_first_run.yml
-      when: _packages_os_managed is undefined
+    - include: packages_os_gather.yml
+      when: >-
+        ansible_facts.python.version is undefined
+        or ansible_facts.packages is not defined
+        or _packages_capabilities_present is undefined
+        or (_packages_groups_present is undefined
+            and ansible_facts.distribution_major_version is version("6", ">"))
+        or _packages_pip_package is undefined
+        or _packages_python_virtualenv_package is undefined
+        or _packages_os_managed is undefined
 
     - name: Setup fact with operating system packages to manage
       set_fact:

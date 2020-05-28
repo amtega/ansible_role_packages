@@ -32,6 +32,5 @@
 
     - include_role:
         name: amtega.epel
-      when: _packages_os_managed is undefined
   tags:
     - always
