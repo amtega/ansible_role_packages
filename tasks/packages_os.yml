@@ -22,14 +22,17 @@
       package:
         name: "{{ package.name }}"
         state: "{{ package.state }}"
+      register: packages_os_setup_result
       loop: "{{ _packages_os_to_manage }}"
       loop_control:
         loop_var: package
         label: >-
           {{ package.name | default('') }} {{ package.state | default('') }}
+      notify: "{{ packages_os_notify }}"
 
     - name: Setup fact with operating packages managed
       set_fact:
+        packages_os_result: "{{ packages_os_setup_result | default({}) }}"
         _packages_os_managed: >-
           {{ _packages_os_managed | default([]) + _packages_os_to_manage }}
       when: >-

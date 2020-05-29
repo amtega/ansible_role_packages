@@ -39,13 +39,17 @@
           {{ package.extra_args
              | default(packages_python_extra_args)
              | default(omit) }}
+      register: packages_python_setup_result
       loop: "{{ _packages_python_to_manage }}"
       loop_control:
         loop_var: package
         label: "{{ package.name }} {{ package.state }}"
+      notify: "{{ packages_python_notify }}"
 
     - name: Setup fact with python packages managed
       set_fact:
+        packages_python_result: >-
+          {{ packages_python_setup_result | default({}) }}
         _packages_python_managed: >-
           {{ _packages_python_managed | default([]) + _packages_python_to_manage }}
       when: >-

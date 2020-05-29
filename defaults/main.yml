@@ -129,6 +129,14 @@ packages_python_set_ansible_interpreter: yes
 packages_distribution_aliases:
   redhat: rhel
 
+# List of handlers to notify when there are changes on operating system packages
+
+packages_os_notify: []
+
+# List of handlers to notify when there are changes on python packages
+
+packages_python_notify: []
+
 # Indicate packages must be loaded also from host variables. See
 # `packages_os_load_from_hostvars` and `packages_python_load_from_hostvars`
 # variables below for details

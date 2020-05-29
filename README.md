@@ -14,6 +14,10 @@ The role setups the following facts:
 
 - `packages_python_bin_dir`: directory (ending with /) containing the binaries of the virtualenv used by the role. Only available if the virtualenv is configured and there are python packages
 
+- `packages_os_result`: result of the operating system packages setup
+
+- `packages_python_result`: result of the python packages setup
+
 ## Modules
 
 The role provides these modules:
