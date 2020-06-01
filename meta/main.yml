@@ -43,7 +43,11 @@ dependencies:
     vars:
       select_hostvars_query:
         pattern: "^packages_os_.*"
-        exclude_pattern: "^packages_os_load_from_hostvars$"
+        exclude_pattern: >-
+          {{ "^packages_os_("
+             + "load_from_hostvars|"
+             + "setup_result|"
+             + "result)$" }}
         fact_name: packages_os_hostvars
         output_type: list
     when: packages_os_load_from_hostvars | bool
@@ -59,7 +63,8 @@ dependencies:
              + "extra_args|"
              + "set_ansible_interpreter|"
              + "bin_dir|"
-             + ").*$" }}
+             + "setup_result|"
+             + "result).*$" }}
         fact_name: packages_python_hostvars
         output_type: list
     when: packages_python_load_from_hostvars | bool
