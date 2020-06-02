@@ -45,7 +45,7 @@
 {% set packages_spec = ([packages_spec | to_json | from_json]
                         + packages_spec_hostvars | default([]))
                        | packages_combine_specs %}
-{% if packages_python.keys() | list | length > 0 %}
+{% if packages_python_process_required > 0 %}
 {% set packages_spec = ([packages_spec | to_json | from_json]
                         + [python_extra_packages_spec | default({})])
                        | packages_combine_specs %}
