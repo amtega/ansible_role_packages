@@ -7,13 +7,10 @@
       tags:
         - always
 
-    - include: packages_python_present.yml
-      when: _packages_python_present is undefined
-
-    - name: Setup fact with python packages to manage
-      set_fact:
-        _packages_python_to_manage: >-
-          {{ lookup('template', 'packages.yml.j2') | from_yaml }}
+    - name: Determine python packages to be managed
+      packages_to_manage:
+        family: python
+      register: packages_python_to_manage_result
 
     - name: Setup python packages
       pip:
@@ -40,27 +37,18 @@
              | default(packages_python_extra_args)
              | default(omit) }}
       register: packages_python_setup_result
-      loop: "{{ _packages_python_to_manage }}"
+      loop: "{{ packages_python_to_manage_result.packages }}"
       loop_control:
         loop_var: package
         label: "{{ package.name }} {{ package.state }}"
       notify: "{{ packages_python_notify }}"
 
-    - name: Setup fact with python packages managed
+    - name: Setup fact with python packages setup result
       set_fact:
         packages_python_result: >-
           {{ packages_python_setup_result | default({}) }}
-        _packages_python_managed: >-
-          {{ _packages_python_managed | default([]) + _packages_python_to_manage }}
-      when: >-
-        _packages_python_managed is undefined
-        or _packages_python_to_manage | length > 0
+      when: packages_python_to_manage_result.packages | length > 0
 
   environment: "{{ proxy_client_environment }}"
-  vars:
-    packages_already_managed: "{{ _packages_python_managed | default([]) }}"
-    packages_already_present: "{{ _packages_python_present | default([]) }}"
-    packages_spec: "{{ packages_python }}"
-    packages_spec_hostvars: "{{ packages_python_hostvars | default([]) }}"
   tags:
     - role::packages::python

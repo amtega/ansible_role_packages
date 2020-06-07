@@ -5,41 +5,6 @@
   gather_facts: no
   roles:
     - role: amtega.packages
-      vars:
-        packages_load_from_hostvars: yes
-        packages_os:
-          centos:
-            all:
-              telnet: present
-            6:
-              httpd: present
-            7:
-              - name: "{{ package_name }}"
-                state: present
-              - tomcat: present
-          fedora:
-            29:
-              httpd: present
-              tomcat: present
-            30:
-              httpd: present
-              tomcat: present
-        packages_python:
-          centos:
-            6:
-              - "pexpect>=3.3": present
-              - "gitlab": present
-            7:
-              "pexpect>=3.3": present
-          fedora:
-            29:
-              - name: "pexpect>=3.3"
-                state: present
-                pip_extra_args: "--upgrade"
-                virtualenv: ~/.ansible_venv
-                virtualenv_site_packages: no
-            30:
-              "pexpect>=3.3": present
   tasks:
     - name: Get operating system packages facts
       package_facts:
@@ -87,3 +52,13 @@
           {{ (ansible_facts.distribution_major_version is version("29", "=="))
              | ternary(pip_venv_result.stdout | default(""),
                        pip_result.stdout) }}
+
+    - name: Pause before replaying
+      pause:
+        seconds: 5
+
+- name: Converge replay
+  hosts: molecule_hosts
+  gather_facts: no
+  roles:
+    - role: amtega.packages

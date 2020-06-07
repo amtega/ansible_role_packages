@@ -5,7 +5,7 @@
     - include_tasks: virtualenv_setup.yml
       when: packages_setup_python_virtualenv_result is undefined
 
-    - include_tasks: virtualenv_python.yml
+    - include_tasks: virtualenv_facts.yml
       when:
         - packages_python_set_ansible_interpreter | bool
         - packages_python_virtualenv_dir is undefined
