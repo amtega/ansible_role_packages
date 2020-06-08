@@ -27,18 +27,17 @@ platforms:
       - molecule_hosts_fedora
 provisioner:
   name: ansible
-  # ansible_args:
-  #   - -vvvvv
   config_options:
     defaults:
       callback_whitelist: profile_tasks
-
+      action_plugins: $PWD/action_plugins
   inventory:
     group_vars:
       molecule_hosts:
         ansible_user: root
         package_name: "httpd"
 
+        packages_debug: yes
         packages_load_from_hostvars: yes
         packages_os:
           centos:
@@ -75,7 +74,6 @@ provisioner:
             30:
               "pexpect>=3.3": present
 
-        packages_load_from_hostvars: yes
         packages_os_extra:
           all:
             all:

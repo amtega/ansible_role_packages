@@ -3,6 +3,7 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
+from ansible.errors import AnsibleError
 from ansible.plugins.action import ActionBase
 from ansible.plugins.filter.core import to_json
 from ansible.plugins.test.core import version_compare
@@ -14,12 +15,45 @@ import re
 class ActionModule(ActionBase):
     _display = Display()
 
-    def _gather(self, *args, **kwargs):
-        # Gather module Variables
+    def _get_task_var(self, name, default=None):
+        """Get templated task variable"""
 
+        if name in self.__task_vars:
+            ret = self._templar.template(self.__task_vars.get(name))
+        else:
+            ret = default
+
+        return ret
+
+    def _action(self, action="tower_api_rest", args={}):
+        """Return a new ansible action"""
+
+        task = self._task.copy()
+
+        task.args = dict()
+        for key in args.keys():
+            task.args[key] = args[key]
+
+        action = self._shared_loader_obj.action_loader.get(
+            action,
+            task=task,
+            connection=self._connection,
+            play_context=self._play_context,
+            loader=self._loader,
+            templar=self._templar,
+            shared_loader_obj=self._shared_loader_obj
+        )
+
+        return action
+
+    def _gather_module_params(self):
+        """Gather module parameters"""
         self.__family = self._task.args.get("family")
 
-        # Gather role variables
+    def _gather_role_vars(self):
+        """Gather role vars"""
+        self.__packages_debug = \
+            self._get_task_var("packages_debug", False)
 
         self.__packages_os = \
             self._get_task_var("packages_os")
@@ -55,12 +89,18 @@ class ActionModule(ActionBase):
         self.__packages_python_extra_args = \
             self._get_task_var("packages_python_extra_args", None)
 
-        # Gather facts
+    def _gather_facts(self):
+        self.__debug_info["facts_gathered"] = False
+        self.__ansible_facts = self._get_task_var("ansible_facts", {})
+        if "python_version" not in self.__ansible_facts.keys():
+            self.__debug_info["facts_gathered"] = True
+            result = self._execute_module(module_name="setup",
+                                          module_args=dict(),
+                                          task_vars=self.__task_vars)
+            self.__ansible_facts = result["ansible_facts"]
 
-        self.__ansible_facts = self._get_task_var("ansible_facts")
-
-        # Gather distro info
-
+    def _gather_distribution_info(self):
+        """Gather distribution info"""
         self.__distro_name = self.__ansible_facts["distribution"].lower()
         self.__distro_name_alias = self.__packages_distribution_aliases.get(
                     self.__distro_name,
@@ -68,22 +108,27 @@ class ActionModule(ActionBase):
         self.__distro_version = \
             str(self.__ansible_facts['distribution_major_version']).lower()
 
-        # Gather python info
-
+    def _gather_python_info(self):
+        """Gather python info"""
         self.__python_version_major = \
             self.__ansible_facts["python"]["version"]["major"]
 
-        # Gather internal facts
+        self.__python_interpreter = "{virtualenv_path}/bin/python".format(
+                        virtualenv_path=self.__packages_python_virtualenv)
 
+    def _gather_private_facts(self):
+        """Gather private facts"""
         self.__packages_os_managed = \
             self.__ansible_facts.get("_packages_os_managed", [])
 
         self.__packages_python_managed = \
             self.__ansible_facts.get("_packages_python_managed", [])
 
-        # Gather packages to manage, packages from hostvars, packages already
-        # managed and packages already present
+        self.__packages_virtualenv_exists = \
+            self.__ansible_facts.get("_packages_virtualenv_exists", None)
 
+    def _gather_package_management_info(self):
+        """Gather package management info"""
         if self.__family == "os":
             self.__packages_to_manage = \
                 self.__packages_os
@@ -99,50 +144,16 @@ class ActionModule(ActionBase):
             self.__packages_managed = \
                 self.__packages_python_managed
 
-    def _get_task_var(self, name, default=None):
-        """Get templated task variable"""
-
-        if name in self._task_vars:
-            ret = self._templar.template(self._task_vars.get(name))
-        else:
-            ret = default
-
-        return ret
-
-    def _action(self, action="tower_api_rest", args={}):
-        """Return a new ansible action"""
-
-        task = self._task.copy()
-
-        task.args = dict()
-        for key in args.keys():
-            task.args[key] = args[key]
-
-        action = self._shared_loader_obj.action_loader.get(
-            action,
-            task=task,
-            connection=self._connection,
-            play_context=self._play_context,
-            loader=self._loader,
-            templar=self._templar,
-            shared_loader_obj=self._shared_loader_obj
-        )
-
-        return action
-
-    def _gather_facts(self):
-        if "python_version" not in self.__ansible_facts:
-            self._execute_module(module_name="setup",
-                                 module_args=dict(),
-                                 task_vars=self._task_vars)
-
-    def _gather_packages(self):
+    def _gather_os_packages(self):
+        """Gather os packages"""
         self.__packages_os_present = list()
 
+        self.__debug_info["packages_os_gathered"] = False
         if "packages" not in self.__ansible_facts:
+            self.__debug_info["packages_os_gathered"] = True
             result = self._execute_module(module_name="package_facts",
                                           module_args=dict(),
-                                          task_vars=self._task_vars)
+                                          task_vars=self.__task_vars)
 
             self.__package_facts = result["ansible_facts"]["packages"]
         else:
@@ -155,15 +166,18 @@ class ActionModule(ActionBase):
         if self.__family == "os":
             self.__packages_present = self.__packages_os_present
 
-    def _gather_capabilites(self):
+    def _gather_os_packages_capabilites(self):
+        """Gather los packages capabilities"""
         self.__capabilities_present = \
             self.__ansible_facts.get("_packages_capabilities_present", None)
 
+        self.__debug_info["capabilites_gathered"] = False
         if self.__capabilities_present is None:
+            self.__debug_info["capabilites_gathered"] = True
             cmd = "/usr/bin/rpm -qa --provides | cut -d = -f 1"
             action = self._action(action="shell",
                                   args=dict(_raw_params=cmd, _uses_shell=True))
-            result = action.run(task_vars=self._task_vars)
+            result = action.run(task_vars=self.__task_vars)
             self.__capabilities_present = \
                 list((p.strip() for p in result["stdout_lines"]))
 
@@ -171,10 +185,12 @@ class ActionModule(ActionBase):
             self.__packages_os_present \
             + self.__capabilities_present
 
-    def _gather_groups(self):
+    def _gather_os_packages_groups(self):
+        """Gather os packages groups"""
         self.__groups_present = \
             self.__ansible_facts.get("_packages_groups_present", None)
 
+        self.__debug_info["groups_gathered"] = False
         if self.__groups_present is None:
             self.__groups_present = list()
 
@@ -182,11 +198,12 @@ class ActionModule(ActionBase):
                             self.__ansible_facts["distribution_major_version"],
                             "6",
                             ">"):
+                self.__debug_info["groups_gathered"] = True
                 cmd = "LANGUAGE=en_US yum group list"
                 action = self._action(action="shell",
                                       args=dict(_raw_params=cmd,
                                                 _uses_shell=True))
-                result = action.run(task_vars=self._task_vars)
+                result = action.run(task_vars=self.__task_vars)
 
                 if "stdout_lines" in result:
                     lines = result["stdout_lines"]
@@ -212,6 +229,7 @@ class ActionModule(ActionBase):
                 self.__packages_present + self.__groups_present
 
     def _gather_python_os_packages(self):
+        """Gather python os packages"""
         if version_compare(self.__distro_version, "7", ">="):
             self.__pip_os_package = "python{version}-pip".format(
                                 version=str(self.__python_version_major))
@@ -233,9 +251,11 @@ class ActionModule(ActionBase):
                                 version=str(self.__python_version_major))
 
     def _gather_python_packages(self):
+        """Gather python packages"""
         self.__packages_python_present = \
             self.__ansible_facts.get("_packages_python_present", None)
 
+        self.__debug_info["packages_python_gathered"] = False
         if self.__family == "python" \
            and self.__packages_python_present is None:
             if len(self.__packages_python_virtualenv) > 0:
@@ -245,38 +265,35 @@ class ActionModule(ActionBase):
                 packages_pip_dir = \
                     self.__ansible_facts["packages_python_bin_dir"]
 
+            self.__debug_info["packages_python_gathered"] = True
             cmd = packages_pip_dir + "pip list | awk '{ print $1 };'"
             action = self._action(action="shell",
                                   args=dict(_raw_params=cmd, _uses_shell=True))
-            result = action.run(task_vars=self._task_vars)
+            result = action.run(task_vars=self.__task_vars)
             self.__packages_python_present = \
                 list((p.strip() for p in result["stdout_lines"]))
 
         if self.__family == "python":
             self.__packages_present = self.__packages_python_present
 
-    def _gather_os_info(self):
-        self._gather_facts()
-        self._gather_packages()
-        self._gather_capabilites()
-        self._gather_groups()
-        self._gather_python_os_packages()
-        self._gather_python_packages()
+    def _gather_virtualenv_status(self):
+        """Gather virtualenv status"""
+        if self.__family == "python" \
+           and self.__packages_virtualenv_exists is None:
+            path = self.__python_interpreter
+            result = self._execute_module(module_name="stat",
+                                          module_args=dict(path=path),
+                                          task_vars=self.__task_vars)
 
-    def _normalize_spec(self, spec):
-        """Normalize packages spec to list
+            self.__packages_virtualenv_exists = result["stat"]["exists"]
 
-        Args:
-            spec (dict): packages spec
+    def _normalize_structure(self, structure):
+        """Return a normalized packages structure"""
 
-        Returns:
-            dict: packages spec normalized
-        """
-
-        normalized_spec = {}
-        for distribution in spec:
-            for release in spec[distribution]:
-                item = spec[distribution][release]
+        normalized_structure = {}
+        for distribution in structure:
+            for release in structure[distribution]:
+                item = structure[distribution][release]
                 normalized_items = []
                 if isinstance(item, dict):
                     for package in item:
@@ -294,47 +311,51 @@ class ActionModule(ActionBase):
                         else:
                             normalized_items.append(subitem)
 
-                if distribution not in normalized_spec.keys():
-                    normalized_spec[distribution] = {}
+                if distribution not in normalized_structure.keys():
+                    normalized_structure[distribution] = {}
 
-                if release not in normalized_spec[distribution]:
-                    normalized_spec[distribution][release] = normalized_items
+                if release not in normalized_structure[distribution]:
+                    normalized_structure[distribution][release] = \
+                        normalized_items
                 else:
-                    normalized_spec[distribution][release] += normalized_items
+                    normalized_structure[distribution][release] += \
+                        normalized_items
 
-        return normalized_spec
+        return normalized_structure
 
-    def _combine_specs(self, specs):
-        """Combine the a list of spects into one dict
+    def _combine_structures(self, structures):
+        """Combine the a list of packags structures into one dict
 
         Args:
-            specs (list): dicts with specs to combine
+            structures (list): dicts with packages structures to combine
 
         Returns:
-            dict: combined specs
+            dict: combined structures
         """
 
-        normalized_specs = []
-        for spec in specs:
-            normalized_specs.append(self._normalize_spec(spec))
+        normalized_structures = []
+        for structure in structures:
+            normalized_structures.append(self._normalize_structure(structure))
 
-        combined_specs = {}
-        for spec in normalized_specs:
-            for distribution in spec:
-                for release in spec[distribution]:
-                    spec_packages = spec[distribution][release]
+        combined_structures = {}
+        for structure in normalized_structures:
+            for distribution in structure:
+                for release in structure[distribution]:
+                    structure_packages = structure[distribution][release]
 
-                    if distribution not in combined_specs.keys():
-                        combined_specs[distribution] = {}
+                    if distribution not in combined_structures.keys():
+                        combined_structures[distribution] = {}
 
-                    if release not in combined_specs[distribution].keys():
-                        combined_specs[distribution][release] = []
+                    if release not in combined_structures[distribution].keys():
+                        combined_structures[distribution][release] = []
 
-                    combined_specs[distribution][release] += spec_packages
+                    combined_structures[distribution][release] += \
+                        structure_packages
 
-        return combined_specs
+        return combined_structures
 
-    def _get_python_os_packages_spec(self):
+    def _get_python_os_packages_structure(self):
+        """Return struture for python os packages"""
         if self.__pip_os_package \
            not in self.__package_facts.keys():
             self.__python_os_packages = \
@@ -357,7 +378,7 @@ class ActionModule(ActionBase):
 
         return dict(all=dict(all=self.__python_os_packages))
 
-    def _get_package_dict(self,
+    def _get_package_spec(self,
                           name,
                           state,
                           virtualenv=None,
@@ -365,6 +386,7 @@ class ActionModule(ActionBase):
                           virtualenv_python=None,
                           virtualenv_site_packages=None,
                           extra_args=None):
+        """Return package specification"""
 
         package_managed = next((p for p in self.__packages_managed
                                 if p["name"] == name), None)
@@ -395,15 +417,16 @@ class ActionModule(ActionBase):
         return result
 
     def _get_packages_to_manage(self):
-        packages_spec = self._combine_specs(
+        """Get packages to manage"""
+        packages_spec = self._combine_structures(
                             [json.loads(to_json(self.__packages_to_manage))]
                             + self.__packages_to_manage_hostvars)
 
         if self.__packages_python_process_required \
            and self.__family == "os":
-            packages_spec = self._combine_specs(
-                                    [json.loads(to_json(packages_spec))]
-                                    + [self._get_python_os_packages_spec()])
+            packages_spec = self._combine_structures(
+                                [json.loads(to_json(packages_spec))]
+                                + [self._get_python_os_packages_structure()])
 
         packages_all_all = []
         packages_all_version = []
@@ -441,10 +464,72 @@ class ActionModule(ActionBase):
 
         return packages_to_process
 
-    def _call(self):
+    def _setup_virtualenv(self):
+        """Setup virtualenv"""
+        self.__debug_info["virtualenv_created"] = False
+        if self.__family == "python" \
+           and not self.__packages_virtualenv_exists:
+
+            if self.__packages_python_virtualenv_python is not None:
+                python = self.__packages_python_virtualenv_python
+            else:
+                if version_compare(self.__python_version_major, "3", "<"):
+                    suffix = ""
+                else:
+                    suffix = str(self.__python_version_major)
+                python = "/usr/bin/python{suffix}".format(suffix=suffix)
+
+            if self.__packages_python_virtualenv_site_packages:
+                args = "--system-site-packages"
+            else:
+                args = ""
+
+            self.__debug_info["virtualenv_created"] = True
+            cmd = "/usr/bin/virtualenv --python={python} {args} {virtualenv}"\
+                .format(python=python,
+                        args=args,
+                        virtualenv=self.__packages_python_virtualenv)
+
+            action = self._action(action="shell",
+                                  args=dict(_raw_params=cmd,
+                                            _uses_shell=False))
+            result = action.run(task_vars=self.__task_vars)
+
+            if result.get("failed", False):
+                raise AnsibleError("Failed to setup virtualenv")
+
+            self.__changed = True
+
+    def _gather(self, *args, **kwargs):
+        self._gather_module_params()
+        self._gather_role_vars()
+        self._gather_facts()
+        self._gather_distribution_info()
+        self._gather_python_info()
+        self._gather_private_facts()
+        self._gather_package_management_info()
+        self._gather_os_packages()
+        self._gather_os_packages_capabilites()
+        self._gather_os_packages_groups()
+        self._gather_python_os_packages()
+
+        if self.__family == "python":
+            self._setup_virtualenv()
+            self._gather_python_packages()
+            self._gather_virtualenv_status()
+
+    def run(self, tmp=None, task_vars=None):
+        """Run the action module"""
+        super(ActionModule, self).run(tmp, task_vars)
+
+        self.__tmp = tmp
+        self.__task_vars = task_vars
+        self.__changed = False
+        self.__debug_info = dict()
+
         self._gather()
-        self._gather_os_info()
-        result = list()
+
+        packages_to_manage = list()
 
         packages = self._get_packages_to_manage()
         for package in packages:
@@ -466,7 +551,7 @@ class ActionModule(ActionBase):
                     "extra_args",
                     self.__packages_python_extra_args)
 
-            package_dict = self._get_package_dict(name,
+            package_dict = self._get_package_spec(name,
                                                   state,
                                                   virtualenv,
                                                   virtualenv_command,
@@ -475,7 +560,10 @@ class ActionModule(ActionBase):
                                                   extra_args)
 
             if package_dict is not None:
-                result = result + [package_dict]
+                packages_to_manage = packages_to_manage + [package_dict]
+
+        action_result = dict(changed=self.__changed,
+                             packages=packages_to_manage)
 
         ansible_facts = dict(
             _packages_capabilities_present=self.__capabilities_present,
@@ -486,22 +574,32 @@ class ActionModule(ActionBase):
         if self.__family == "os":
             ansible_facts["_packages_os_managed"] = \
                 self.__packages_os_managed \
-                + result
+                + packages_to_manage
 
         if self.__family == "python":
             ansible_facts["_packages_python_managed"] = \
                 self.__packages_python_managed \
-                + result
+                + packages_to_manage
             ansible_facts["_packages_python_present"] = \
                 self.__packages_python_present
+            ansible_facts["_packages_virtualenv_exists"] = \
+                self.__packages_virtualenv_exists
+            ansible_facts["packages_python_virtualenv_dir"] = \
+                "{path}/".format(path=self.__packages_python_virtualenv)
+            ansible_facts["packages_python_bin_dir"] = \
+                "{path}/bin/".format(path=self.__packages_python_virtualenv)
 
-        return dict(packages=result,
-                    ansible_facts=ansible_facts)
+            action = self._action(
+                action="set_fact",
+                args=dict(
+                    ansible_python_interpreter=self.__python_interpreter))
+            action.run(task_vars=self.__task_vars)
 
-    def run(self, tmp=None, task_vars=None):
-        """Run the action module"""
+            action_result["python_interpreter"] = self.__python_interpreter
 
-        super(ActionModule, self).run(tmp, task_vars)
-        self._tmp = tmp
-        self._task_vars = task_vars
-        return self._call()
+        if self.__packages_debug:
+            action_result["debug"] = self.__debug_info
+
+        action_result["ansible_facts"] = ansible_facts
+
+        return action_result

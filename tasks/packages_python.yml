@@ -2,12 +2,7 @@
 # Setup python packages tasks
 
 - block:
-    - include_tasks: virtualenv.yml
-      when: packages_python_virtualenv | default("") | length > 0
-      tags:
-        - always
-
-    - name: Determine python packages to be managed
+    - name: Determine python packages to be managed and setup virtualenv
       packages_to_manage:
         family: python
       register: packages_python_to_manage_result
@@ -42,6 +37,12 @@
         loop_var: package
         label: "{{ package.name }} {{ package.state }}"
       notify: "{{ packages_python_notify }}"
+
+    - name: Setup ansible python interpreter
+      set_fact:
+        ansible_python_interpreter: >-
+          {{ packages_python_to_manage_result.python_interpreter }}
+      when: packages_python_set_ansible_interpreter | bool
 
     - name: Setup fact with python packages setup result
       set_fact:
