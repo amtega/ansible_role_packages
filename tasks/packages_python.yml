@@ -3,7 +3,7 @@
 
 - block:
     - name: Determine python packages to be managed and setup virtualenv
-      packages_to_manage:
+      _packages:
         family: python
       register: packages_python_to_manage_result
 

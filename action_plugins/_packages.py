@@ -514,9 +514,9 @@ class ActionModule(ActionBase):
         self._gather_python_os_packages()
 
         if self.__family == "python":
+            self._gather_virtualenv_status()
             self._setup_virtualenv()
             self._gather_python_packages()
-            self._gather_virtualenv_status()
 
     def run(self, tmp=None, task_vars=None):
         """Run the action module"""

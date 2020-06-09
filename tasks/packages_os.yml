@@ -7,7 +7,7 @@
       when: ansible_local.epel is undefined
 
     - name: Determine operating system packages to be managed
-      packages_to_manage:
+      _packages:
         family: os
       register: packages_os_to_manage_result
 
