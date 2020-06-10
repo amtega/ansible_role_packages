@@ -18,12 +18,6 @@ The role setups the following facts:
 
 - `packages_python_result`: result of the python packages setup
 
-## Modules
-
-The role provides these modules:
-
-- packages_shadow_facts: get remote encrypted shadow password information for a set of users.
-
 ## Example Playbook
 
 This is an example playbook:

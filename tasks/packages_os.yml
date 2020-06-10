@@ -2,83 +2,33 @@
 # Setup operating system packages tasks
 
 - block:
-    - include: packages_os_gather.yml
-      when: >-
-        ansible_facts.python.version is undefined
-        or ansible_facts.packages is not defined
-        or _packages_capabilities_present is undefined
-        or (_packages_groups_present is undefined
-            and ansible_facts.distribution_major_version is version("6", ">"))
-        or _packages_pip_package is undefined
-        or _packages_python_virtualenv_package is undefined
-        or _packages_os_managed is undefined
+    - include_role:
+        name: amtega.epel
+      when: ansible_local.epel is undefined
 
-    - name: Setup fact with operating system packages to manage
-      set_fact:
-        _packages_os_to_manage: >-
-          {{ lookup('template', 'packages.yml.j2') | from_yaml }}
+    - name: Determine operating system packages to be managed
+      _packages:
+        family: os
+      register: packages_os_to_manage_result
 
     - name: Setup operating system packages
       package:
         name: "{{ package.name }}"
         state: "{{ package.state }}"
       register: packages_os_setup_result
-      loop: "{{ _packages_os_to_manage }}"
+      loop: "{{ packages_os_to_manage_result.packages }}"
       loop_control:
         loop_var: package
         label: >-
           {{ package.name | default('') }} {{ package.state | default('') }}
       notify: "{{ packages_os_notify }}"
 
-    - name: Setup fact with operating packages managed
+    - name: Setup fact with operating packages setup result
       set_fact:
         packages_os_result: "{{ packages_os_setup_result | default({}) }}"
-        _packages_os_managed: >-
-          {{ _packages_os_managed | default([]) + _packages_os_to_manage }}
-      when: >-
-        _packages_os_managed is undefined
-        or _packages_os_to_manage | length > 0
+      when: packages_os_to_manage_result.packages | length > 0
 
   environment: "{{ proxy_client_environment | default({}) }}"
-  vars:
-    python_setup_tools_package: python-setuptools
-
-    python_pip_packages_spec:
-      - name: "{{ _packages_pip_package }}"
-        state: present
-
-    python_setup_tools_packages_spec:
-      - name: "{{ python_setup_tools_package }}"
-        state: present
-
-    python_virtualenv_packages_spec:
-      - name: "{{ _packages_python_virtualenv_package }}"
-        state: present
-
-    python_extra_packages: >-
-      {{ (_packages_pip_package not in ansible_facts.packages.keys() | list)
-         | ternary(python_pip_packages_spec, [])
-         + (python_setup_tools_package
-            not in ansible_facts.packages.keys() | list)
-           | ternary(python_setup_tools_packages_spec, [])
-         + (_packages_python_virtualenv_package
-            not in ansible_facts.packages.keys() | list)
-           | ternary(python_virtualenv_packages_spec, []) }}
-
-    python_extra_packages_spec:
-      all:
-        all: "{{ python_extra_packages }}"
-
-    packages_already_managed: "{{ _packages_os_managed | default([]) }}"
-
-    packages_already_present: >-
-      {{ ansible_facts.packages.keys() | list
-         + _packages_capabilities_present
-         + _packages_groups_present | default([]) }}
-
-    packages_spec: "{{ packages_os }}"
-
-    packages_spec_hostvars: "{{ packages_os_hostvars | default([]) }}"
   tags:
     - role::packages
     - role::packages::os

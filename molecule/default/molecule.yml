@@ -4,35 +4,92 @@ dependency:
   name: galaxy
 driver:
   name: docker
-lint:
-  name: yamllint
+lint: |
+  set -e
+  export ANSIBLE_ACTION_PLUGINS=$PWD/action_plugins
+  export ANSIBLE_BECOME_PLUGINS=$PWD/become_plugins
+  export ANSIBLE_CACHE_PLUGINS=$PWD/cache_plugins
+  export ANSIBLE_CALLBACK_PLUGINS=$PWD/callback_plugins
+  export ANSIBLE_CLICONF_PLUGINS=$PWD/cliconf_plugins
+  export ANSIBLE_CONNECTION_PLUGINS=$PWD/connection_plugins
+  export ANSIBLE_DOC_FRAGMENT_PLUGINS=$PWD/doc_fragment_plugins
+  export ANSIBLE_FILTER_PLUGINS=$PWD/filter_plugins
+  export ANSIBLE_HTTPAPI_PLUGINS=$PWD/httpapi_plugins
+  export ANSIBLE_INVENTORY_PLUGINS=$PWD/inventory_plugins
+  export ANSIBLE_LIBRARY=$PWD/library
+  export ANSIBLE_LOOKUP_PLUGINS=$PWD/lookup_plugins
+  export ANSIBLE_NETCONF_PLUGINS=$PWD/netconf_plugins
+  export ANSIBLE_STRATEGY_PLUGINS=$PWD/strategy_plugins
+  export ANSIBLE_TERMINAL_PLUGINS=$PWD/terminal_plugins
+  export ANSIBLE_TEST_PLUGINS=$PWD/test_plugins
+  export ANSIBLE_VARS_PLUGINS=$PWD/vars_plugins
+  yamllint .
+  ansible-lint
+  flake8
 platforms:
-  - name: centos6
+  - name: "centos6-${INSTANCE_UUID:-1}"
     image: centos:6
     groups:
       - molecule_hosts
-  - name: centos7
+  - name: "centos7-${INSTANCE_UUID:-1}"
     image: centos:7
     groups:
       - molecule_hosts
-  - name: fedora29
+  - name: "fedora29-${INSTANCE_UUID:-1}"
     image: fedora:29
     groups:
       - molecule_hosts
       - molecule_hosts_fedora
-  - name: fedora30
+  - name: "fedora30-${INSTANCE_UUID:-1}"
     image: fedora:30
     groups:
       - molecule_hosts
       - molecule_hosts_fedora
 provisioner:
   name: ansible
+  config_options:
+    defaults:
+      callback_whitelist: profile_tasks
   inventory:
     group_vars:
       molecule_hosts:
-        ansible_user: root
         package_name: "httpd"
+        packages_debug: yes
         packages_load_from_hostvars: yes
+        packages_os:
+          centos:
+            all:
+              telnet: present
+            6:
+              httpd: present
+            7:
+              - name: "{{ package_name }}"
+                state: present
+              - tomcat: present
+          fedora:
+            29:
+              httpd: present
+              tomcat: present
+            30:
+              httpd: present
+              tomcat: present
+              "@Development Tools": present
+        packages_python:
+          centos:
+            6:
+              - "pexpect>=3.3": present
+              - "gitlab": present
+            7:
+              "pexpect>=3.3": present
+          fedora:
+            29:
+              - name: "pexpect>=3.3"
+                state: present
+                pip_extra_args: "--upgrade"
+                virtualenv: ~/.ansible_venv
+                virtualenv_site_packages: no
+            30:
+              "pexpect>=3.3": present
         packages_os_extra:
           all:
             all:
@@ -43,9 +100,5 @@ provisioner:
               lxml: present
       molecule_hosts_fedora:
         ansible_python_interpreter: /usr/bin/python3
-  lint:
-    name: ansible-lint
 verifier:
-  name: testinfra
-  lint:
-    name: flake8
+  name: ansible

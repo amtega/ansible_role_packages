@@ -1,0 +1,93 @@
+---
+
+- name: Verify core functionality
+  hosts: molecule_hosts
+  gather_facts: no
+  roles:
+      - amtega.packages
+  tasks:
+    - name: Get operating system packages facts
+      package_facts:
+
+    - name: Check operating system packages
+      assert:
+        that:
+          - >-
+            "httpd" in packages
+          - >-
+            "lynx" in packages
+          - >-
+            ansible_facts.distribution | lower != "centos"
+            or (ansible_facts.distribution | lower == "centos"
+                and "telnet" in packages)
+          - >-
+            ansible_facts.distribution_major_version is version("6", "==")
+            or (ansible_facts.distribution_major_version is version("6", "!=")
+                and "tomcat" in packages)
+      vars:
+        packages: "{{ ansible_facts.packages.keys() | list }}"
+
+    - name: Get python packages facts
+      command: "{{ packages_python_bin_dir }}pip list"
+      changed_when: no
+      register: pip_result
+
+    - name: Get python packages facts in custon virtual environment
+      command: "~/.ansible_venv/bin/pip list"
+      changed_when: no
+      when: ansible_facts.distribution_major_version is version("29", "==")
+      register: pip_venv_result
+
+    - name: Check python packages
+      assert:
+        that:
+          - pip_output is search("pexpect")
+
+          - >-
+            ansible_facts.distribution_major_version is version("7", "!=")
+            or (ansible_facts.distribution_major_version is version("7", "==")
+                and pip_output is search("lxml"))
+      vars:
+        pip_output: >-
+          {{ (ansible_facts.distribution_major_version is version("29", "=="))
+             | ternary(pip_venv_result.stdout | default(""),
+                       pip_result.stdout) }}
+
+    - name: Check facts
+      assert:
+        that:
+          - >-
+            (ansible_facts["_packages_capabilities_present"] | length > 0
+             and ansible_facts.distribution_major_version is version("6", ">"))
+             or (ansible_facts["_packages_capabilities_present"] == 0
+                 and ansible_facts.distribution_major_version
+                     is version("7"), "z")
+          - ansible_facts["_packages_groups_present"] | length >= 0
+          - ansible_facts["packages"] | length > 0
+          - ansible_facts["_packages_os_managed"] | length == 0
+          - ansible_facts["_packages_python_managed"] | length > 0
+          - ansible_facts["_packages_python_present"] | length > 0
+          - ansible_facts["_packages_virtualenv_exists"]
+          - ansible_python_interpreter == "/var/lib/ansible/venv/bin/python"
+          - >-
+            ansible_facts["packages_python_virtualenv_dir"]
+            == "/var/lib/ansible/venv/"
+          - >-
+            ansible_facts["packages_python_bin_dir"]
+            == "/var/lib/ansible/venv/bin/"
+
+- name: Verify caching stuff
+  hosts: molecule_hosts
+  gather_facts: no
+  roles:
+      - amtega.packages
+  tasks:
+    - name: Check caching stuff
+      assert:
+        that:
+          - not packages_os_to_manage_result.debug.facts_gathered
+          - not packages_os_to_manage_result.debug.packages_os_gathered
+          - not packages_os_to_manage_result.debug.capabilites_gathered
+          - not packages_os_to_manage_result.debug.groups_gathered
+          - not packages_python_to_manage_result.debug.packages_python_gathered
+          - not packages_python_to_manage_result.debug.virtualenv_created
