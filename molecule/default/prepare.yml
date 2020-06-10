@@ -1,9 +1,0 @@
----
-
-- name: Prepare testing environment
-  hosts: molecule_hosts_fedora
-  become: yes
-  gather_facts: no
-  tasks:
-    - name: Setup packages
-      raw: dnf install -y python*-rpm python*-dnf

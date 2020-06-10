@@ -5,7 +5,7 @@ __metaclass__ = type
 
 from ansible.errors import AnsibleError
 from ansible.plugins.action import ActionBase
-from ansible.plugins.filter.core import to_json
+from ansible.plugins.filter.core import combine, to_json
 from ansible.plugins.test.core import version_compare
 from ansible.utils.display import Display
 import json
@@ -13,6 +13,8 @@ import re
 
 
 class ActionModule(ActionBase):
+    TRANSFERS_FILES = False
+
     _display = Display()
 
     def _get_task_var(self, name, default=None):
@@ -45,6 +47,12 @@ class ActionModule(ActionBase):
         )
 
         return action
+
+    def _get_fact(self, name, default=None):
+        """Get a fact"""
+        result = self.__ansible_facts.get(name,
+                                          self.__ansible_facts.get(default))
+        return result
 
     def _gather_module_params(self):
         """Gather module parameters"""
@@ -92,21 +100,25 @@ class ActionModule(ActionBase):
     def _gather_facts(self):
         self.__debug_info["facts_gathered"] = False
         self.__ansible_facts = self._get_task_var("ansible_facts", {})
+        self.__ansible_facts_gathered = False
         if "python_version" not in self.__ansible_facts.keys():
             self.__debug_info["facts_gathered"] = True
             result = self._execute_module(module_name="setup",
                                           module_args=dict(),
                                           task_vars=self.__task_vars)
             self.__ansible_facts = result["ansible_facts"]
+            self.__ansible_facts_gathered = True
 
     def _gather_distribution_info(self):
         """Gather distribution info"""
-        self.__distro_name = self.__ansible_facts["distribution"].lower()
+        self.__distro_name = self._get_fact("ansible_distribution",
+                                            "distribution").lower()
         self.__distro_name_alias = self.__packages_distribution_aliases.get(
                     self.__distro_name,
                     self.__distro_name).lower()
         self.__distro_version = \
-            str(self.__ansible_facts['distribution_major_version']).lower()
+            str(self._get_fact("ansible_distribution_major_version",
+                               "distribution_major_version")).lower()
 
     def _gather_python_info(self):
         """Gather python info"""
@@ -194,10 +206,7 @@ class ActionModule(ActionBase):
         if self.__groups_present is None:
             self.__groups_present = list()
 
-            if version_compare(
-                            self.__ansible_facts["distribution_major_version"],
-                            "6",
-                            ">"):
+            if version_compare(self.__distro_version, "6", ">"):
                 self.__debug_info["groups_gathered"] = True
                 cmd = "LANGUAGE=en_US yum group list"
                 action = self._action(action="shell",
@@ -537,7 +546,7 @@ class ActionModule(ActionBase):
             state = package["state"]
             virtualenv = package.get(
                     "virtualenv",
-                     self.__packages_python_virtualenv)
+                    self.__packages_python_virtualenv)
             virtualenv_command = package.get(
                     "virtualenv_command",
                     self.__packages_python_virtualenv_command)
@@ -596,6 +605,9 @@ class ActionModule(ActionBase):
             action.run(task_vars=self.__task_vars)
 
             action_result["python_interpreter"] = self.__python_interpreter
+
+        if self.__ansible_facts_gathered:
+            ansible_facts = combine(self.__ansible_facts, ansible_facts)
 
         if self.__packages_debug:
             action_result["debug"] = self.__debug_info
