@@ -51,54 +51,56 @@ provisioner:
     defaults:
       callback_whitelist: profile_tasks
   inventory:
-    group_vars:
+    hosts:
       molecule_hosts:
-        package_name: "httpd"
-        packages_debug: yes
-        packages_load_from_hostvars: yes
-        packages_os:
-          centos:
+        vars:
+          package_name: "httpd"
+          packages_debug: yes
+          packages_load_from_hostvars: yes
+          packages_os:
+            centos:
+              all:
+                telnet: present
+              6:
+                httpd: present
+              7:
+                - name: "{{ package_name }}"
+                  state: present
+                - tomcat: present
+            fedora:
+              29:
+                httpd: present
+                tomcat: present
+              30:
+                httpd: present
+                tomcat: present
+                "@Development Tools": present
+          packages_python:
+            centos:
+              6:
+                - "pexpect>=3.3": present
+                - "gitlab": present
+              7:
+                "pexpect>=3.3": present
+            fedora:
+              29:
+                - name: "pexpect>=3.3"
+                  state: present
+                  pip_extra_args: "--upgrade"
+                  virtualenv: ~/.ansible_venv
+                  virtualenv_site_packages: no
+              30:
+                "pexpect>=3.3": present
+          packages_os_extra:
             all:
-              telnet: present
-            6:
-              httpd: present
-            7:
-              - name: "{{ package_name }}"
-                state: present
-              - tomcat: present
-          fedora:
-            29:
-              httpd: present
-              tomcat: present
-            30:
-              httpd: present
-              tomcat: present
-              "@Development Tools": present
-        packages_python:
-          centos:
-            6:
-              - "pexpect>=3.3": present
-              - "gitlab": present
-            7:
-              "pexpect>=3.3": present
-          fedora:
-            29:
-              - name: "pexpect>=3.3"
-                state: present
-                pip_extra_args: "--upgrade"
-                virtualenv: ~/.ansible_venv
-                virtualenv_site_packages: no
-            30:
-              "pexpect>=3.3": present
-        packages_os_extra:
-          all:
-            all:
-              lynx: present
-        packages_python_extra:
-          centos:
-            7:
-              lxml: present
+              all:
+                lynx: present
+          packages_python_extra:
+            centos:
+              7:
+                lxml: present
       molecule_hosts_fedora:
-        ansible_python_interpreter: /usr/bin/python3
+        vars:
+          ansible_python_interpreter: /usr/bin/python3
 verifier:
   name: ansible

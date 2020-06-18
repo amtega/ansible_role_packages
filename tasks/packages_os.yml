@@ -9,24 +9,14 @@
     - name: Determine operating system packages to be managed
       _packages:
         family: os
-      register: packages_os_to_manage_result
+      register: packages_os_process_result
 
-    - name: Setup operating system packages
-      package:
-        name: "{{ package.name }}"
-        state: "{{ package.state }}"
-      register: packages_os_setup_result
-      loop: "{{ packages_os_to_manage_result.packages }}"
-      loop_control:
-        loop_var: package
-        label: >-
-          {{ package.name | default('') }} {{ package.state | default('') }}
-      notify: "{{ packages_os_notify }}"
+    - include_tasks: "packages_os_{{ packages_os_process_result.module }}.yml"
 
     - name: Setup fact with operating packages setup result
       set_fact:
         packages_os_result: "{{ packages_os_setup_result | default({}) }}"
-      when: packages_os_to_manage_result.packages | length > 0
+      when: packages_os_process_result.packages | length > 0
 
   environment: "{{ proxy_client_environment | default({}) }}"
   tags:

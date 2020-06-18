@@ -120,6 +120,13 @@ class ActionModule(ActionBase):
             str(self._get_fact("ansible_distribution_major_version",
                                "distribution_major_version")).lower()
 
+    def _gather_packages_module(self):
+        """Gather packages module"""
+        if self.__distro_name in ["centos", "redhat"]:
+            self.__package_module = "yum"
+        else:
+            self.__package_module = "dnf"
+
     def _gather_python_info(self):
         """Gather python info"""
         self.__python_version_major = \
@@ -493,7 +500,6 @@ class ActionModule(ActionBase):
             else:
                 args = ""
 
-            self.__debug_info["virtualenv_created"] = True
             cmd = "/usr/bin/virtualenv --python={python} {args} {virtualenv}"\
                 .format(python=python,
                         args=args,
@@ -507,6 +513,9 @@ class ActionModule(ActionBase):
             if result.get("failed", False):
                 raise AnsibleError("Failed to setup virtualenv")
 
+            self.__debug_info["virtualenv_created"] = True
+            self.__packages_virtualenv_exists = True
+
             self.__changed = True
 
     def _gather(self, *args, **kwargs):
@@ -514,6 +523,7 @@ class ActionModule(ActionBase):
         self._gather_role_vars()
         self._gather_facts()
         self._gather_distribution_info()
+        self._gather_packages_module()
         self._gather_python_info()
         self._gather_private_facts()
         self._gather_package_management_info()
@@ -584,6 +594,7 @@ class ActionModule(ActionBase):
             ansible_facts["_packages_os_managed"] = \
                 self.__packages_os_managed \
                 + packages_to_manage
+            action_result["module"] = self.__package_module
 
         if self.__family == "python":
             ansible_facts["_packages_python_managed"] = \

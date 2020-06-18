@@ -46,7 +46,7 @@ dependencies:
         exclude_pattern: >-
           {{ "^packages_os_("
              + "load_from_hostvars|"
-             + "to_manage_result|"
+             + "process_result|"
              + "setup_result|"
              + "result)$" }}
         fact_name: packages_os_hostvars
@@ -64,7 +64,7 @@ dependencies:
              + "extra_args|"
              + "set_ansible_interpreter|"
              + "bin_dir|"
-             + "to_manage_result|"
+             + "process_result|"
              + "setup_result|"
              + "result).*$" }}
         fact_name: packages_python_hostvars
