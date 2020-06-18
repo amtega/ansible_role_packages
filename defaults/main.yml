@@ -137,6 +137,15 @@ packages_os_notify: []
 
 packages_python_notify: []
 
+# List of plugins to disable
+
+packages_disable_plugins:
+  - fastestmirror
+
+# List of plugins to enable
+
+packages_enable_plugins: []
+
 # Indicate packages must be loaded also from host variables. See
 # `packages_os_load_from_hostvars` and `packages_python_load_from_hostvars`
 # variables below for details
