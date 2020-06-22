@@ -28,7 +28,7 @@
         packages: "{{ ansible_facts.packages.keys() | list }}"
 
     - name: Get python packages facts
-      command: "{{ packages_python_bin_dir }}pip list"
+      command: "{{ ansible_facts.packages_python_bin_dir }}pip list"
       changed_when: no
       register: pip_result
 

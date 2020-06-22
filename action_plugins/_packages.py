@@ -146,6 +146,9 @@ class ActionModule(ActionBase):
         self.__packages_virtualenv_exists = \
             self.__ansible_facts.get("_packages_virtualenv_exists", None)
 
+        self.__packages_python_virtualenv_previous = \
+            self.__ansible_facts.get("_packages_python_virtualenv", None)
+
     def _gather_package_management_info(self):
         """Gather package management info"""
         if self.__family == "os":
@@ -203,6 +206,9 @@ class ActionModule(ActionBase):
         self.__packages_os_present = \
             self.__packages_os_present \
             + self.__capabilities_present
+
+        if self.__family == "os":
+            self.__packages_present = self.__packages_os_present
 
     def _gather_os_packages_groups(self):
         """Gather os packages groups"""
@@ -273,7 +279,10 @@ class ActionModule(ActionBase):
 
         self.__debug_info["packages_python_gathered"] = False
         if self.__family == "python" \
-           and self.__packages_python_present is None:
+           and (self.__packages_python_present is None
+                or (self.__packages_python_virtualenv_previous is not None
+                    and self.__packages_python_virtualenv_previous
+                    != self.__packages_python_virtualenv)):
             if len(self.__packages_python_virtualenv) > 0:
                 packages_pip_dir = "{virtualenv}/bin/".format(
                                 virtualenv=self.__packages_python_virtualenv)
@@ -604,6 +613,8 @@ class ActionModule(ActionBase):
                 self.__packages_python_present
             ansible_facts["_packages_virtualenv_exists"] = \
                 self.__packages_virtualenv_exists
+            ansible_facts["_packages_python_virtualenv"] = \
+                self.__packages_python_virtualenv
             ansible_facts["packages_python_virtualenv_dir"] = \
                 "{path}/".format(path=self.__packages_python_virtualenv)
             ansible_facts["packages_python_bin_dir"] = \
