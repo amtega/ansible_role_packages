@@ -283,6 +283,10 @@ class ActionModule(ActionBase):
                 or (self.__packages_python_virtualenv_previous is not None
                     and self.__packages_python_virtualenv_previous
                     != self.__packages_python_virtualenv)):
+
+            self.__packages_python_managed = []
+            self.__packages_managed = []
+
             if len(self.__packages_python_virtualenv) > 0:
                 packages_pip_dir = "{virtualenv}/bin/".format(
                                 virtualenv=self.__packages_python_virtualenv)
