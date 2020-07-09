@@ -14,7 +14,10 @@
     label: >-
       {{ package.name | default('') }} {{ package.state | default('') }}
   notify: "{{ packages_os_notify }}"
-  environment: "{{ proxy_client_environment | default({}) }}"
+  environment: >-
+    {{ proxy_client_environment
+       | default({})
+       | combine(packages_tmp_dir_environment) }}
   tags:
     - role::packages
     - role::packages::os

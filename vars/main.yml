@@ -18,3 +18,6 @@ packages_enable_plugin_value: >-
   {{ (packages_enable_plugins is undefined
       or packages_enable_plugins | length == 0)
       | ternary(omit, packages_enable_plugins | join(',')) }}
+
+packages_tmp_dir_environment:
+  TMPDIR: "{{ packages_tmp_dir }}"

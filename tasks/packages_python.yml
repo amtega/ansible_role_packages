@@ -50,6 +50,9 @@
           {{ packages_python_setup_result | default({}) }}
       when: packages_python_process_result.packages | length > 0
 
-  environment: "{{ proxy_client_environment }}"
+  environment: >-
+    {{ proxy_client_environment
+       | default({})
+       | combine(packages_tmp_dir_environment) }}
   tags:
     - role::packages::python
