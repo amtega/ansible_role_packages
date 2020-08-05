@@ -27,7 +27,7 @@ class ActionModule(ActionBase):
 
         return ret
 
-    def _action(self, action="tower_api_rest", args={}):
+    def _action(self, action="_packages", args={}):
         """Return a new ansible action"""
 
         task = self._task.copy()
