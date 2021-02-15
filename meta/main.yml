@@ -4,9 +4,7 @@
 galaxy_info:
   role_name: packages
   author: Juan Antonio Valiño García
-  description: >-
-   Setup different package set based on distribution name and major release.
-   It supports operating system packages and python packages.
+  description: Setup packages based on the distribution name and major release
   company: AMTEGA - Xunta de Galicia
   license: GPLv3 or EUPL
   min_ansible_version: 2.9
