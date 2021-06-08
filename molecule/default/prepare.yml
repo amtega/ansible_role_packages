@@ -1,5 +1,16 @@
 ---
 
 - name: Prepare
-  hosts: molecule_hosts
+  hosts: molecule_hosts_centos_8
   gather_facts: no
+  roles:
+    - amtega.epel
+  tasks:
+    - name: Install dnf plugins core
+      package:
+        name: dnf-plugins-core
+        state: present
+
+    - name: Enable powertools repository
+      command: dnf config-manager --set-enabled powertools
+      when: yes

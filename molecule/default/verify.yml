@@ -23,7 +23,7 @@
           - >-
             ansible_facts.distribution_major_version is version("6", "==")
             or (ansible_facts.distribution_major_version is version("6", "!=")
-                and "tomcat" in packages)
+                and ("tomcat" in packages or "tomcat-native" in packages)
       vars:
         packages: "{{ ansible_facts.packages.keys() | list }}"
 
