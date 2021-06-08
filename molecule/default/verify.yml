@@ -4,7 +4,7 @@
   hosts: molecule_hosts
   gather_facts: no
   roles:
-      - amtega.packages
+    - amtega.packages
   tasks:
     - name: Get operating system packages facts
       package_facts:
@@ -80,7 +80,7 @@
   hosts: molecule_hosts
   gather_facts: no
   roles:
-      - amtega.packages
+    - amtega.packages
   tasks:
     - name: Check caching stuff
       assert:

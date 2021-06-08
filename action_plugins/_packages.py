@@ -513,8 +513,14 @@ class ActionModule(ActionBase):
             else:
                 args = ""
 
-            cmd = "/usr/bin/virtualenv --python={python} {args} {virtualenv}"\
-                .format(python=python,
+            if self.__packages_python_virtualenv_command is not None:
+                virtualenv_cmd = self.__packages_python_virtualenv_command
+            else:
+                virtualenv_cmd = "/usr/bin/virtualenv"
+
+            cmd = "{virtualenv_cmd} --python={python} {args} {virtualenv}"\
+                .format(virtualenv_cmd=virtualenv_cmd,
+                        python=python,
                         args=args,
                         virtualenv=self.__packages_python_virtualenv)
 
