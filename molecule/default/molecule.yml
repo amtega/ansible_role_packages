@@ -2,54 +2,52 @@
 
 dependency:
   name: galaxy
+  enabled: yes
+  options:
+    ignore-certs: yes
+    ignore-errors: yes
+    role-file: "${MOLECULE_SCENARIO_DIRECTORY}/requirements.yml"
+    requirements-file: "${MOLECULE_SCENARIO_DIRECTORY}/requirements.yml"
 driver:
   name: docker
-lint: |
-  set -e
-  export ANSIBLE_ACTION_PLUGINS=$PWD/action_plugins
-  export ANSIBLE_BECOME_PLUGINS=$PWD/become_plugins
-  export ANSIBLE_CACHE_PLUGINS=$PWD/cache_plugins
-  export ANSIBLE_CALLBACK_PLUGINS=$PWD/callback_plugins
-  export ANSIBLE_CLICONF_PLUGINS=$PWD/cliconf_plugins
-  export ANSIBLE_CONNECTION_PLUGINS=$PWD/connection_plugins
-  export ANSIBLE_DOC_FRAGMENT_PLUGINS=$PWD/doc_fragment_plugins
-  export ANSIBLE_FILTER_PLUGINS=$PWD/filter_plugins
-  export ANSIBLE_HTTPAPI_PLUGINS=$PWD/httpapi_plugins
-  export ANSIBLE_INVENTORY_PLUGINS=$PWD/inventory_plugins
-  export ANSIBLE_LIBRARY=$PWD/library
-  export ANSIBLE_LOOKUP_PLUGINS=$PWD/lookup_plugins
-  export ANSIBLE_NETCONF_PLUGINS=$PWD/netconf_plugins
-  export ANSIBLE_STRATEGY_PLUGINS=$PWD/strategy_plugins
-  export ANSIBLE_TERMINAL_PLUGINS=$PWD/terminal_plugins
-  export ANSIBLE_TEST_PLUGINS=$PWD/test_plugins
-  export ANSIBLE_VARS_PLUGINS=$PWD/vars_plugins
-  yamllint .
-  ansible-lint
-  flake8
+lint: "${MOLECULE_SCENARIO_DIRECTORY}/linters.sh"
 platforms:
   - name: "centos6-${INSTANCE_UUID:-1}"
     image: centos:6
+    dockerfile: Dockerfile.centos6.j2
     groups:
       - molecule_hosts
+      - molecule_hosts_centos
+      - molecule_hosts_centos_6
   - name: "centos7-${INSTANCE_UUID:-1}"
     image: centos:7
     groups:
       - molecule_hosts
-  - name: "fedora29-${INSTANCE_UUID:-1}"
-    image: fedora:29
+      - molecule_hosts_centos
+      - molecule_hosts_centos_7
+  - name: "centos8-${INSTANCE_UUID:-1}"
+    image: centos:8
+    groups:
+      - molecule_hosts
+      - molecule_hosts_centos
+      - molecule_hosts_centos_8
+  - name: "fedora33-${INSTANCE_UUID:-1}"
+    image: fedora:33
     groups:
       - molecule_hosts
       - molecule_hosts_fedora
-  - name: "fedora30-${INSTANCE_UUID:-1}"
-    image: fedora:30
+      - molecule_hosts_fedora_33
+  - name: "fedora34-${INSTANCE_UUID:-1}"
+    image: fedora:34
     groups:
       - molecule_hosts
       - molecule_hosts_fedora
+      - molecule_hosts_fedora_34
 provisioner:
   name: ansible
   config_options:
     defaults:
-      callback_whitelist: profile_tasks
+      callback_enabled: profile_tasks
   inventory:
     hosts:
       molecule_hosts:
@@ -67,11 +65,15 @@ provisioner:
                 - name: "{{ package_name }}"
                   state: present
                 - tomcat: present
+              8:
+                - name: "{{ package_name }}"
+                  state: present
+                - tomcat-native: present
             fedora:
-              29:
+              33:
                 httpd: present
                 tomcat: present
-              30:
+              34:
                 httpd: present
                 tomcat: present
                 "@Development Tools": present
@@ -82,14 +84,16 @@ provisioner:
                 - "gitlab": present
               7:
                 "pexpect>=3.3": present
+              8:
+                "pexpect>=3.3": present
             fedora:
-              29:
+              33:
                 - name: "pexpect>=3.3"
                   state: present
                   pip_extra_args: "--upgrade"
                   virtualenv: ~/.ansible_venv
                   virtualenv_site_packages: no
-              30:
+              34:
                 "pexpect>=3.3": present
           packages_os_extra:
             all:
@@ -98,6 +102,8 @@ provisioner:
           packages_python_extra:
             centos:
               7:
+                lxml: present
+              8:
                 lxml: present
       molecule_hosts_fedora:
         vars:

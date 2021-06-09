@@ -4,7 +4,7 @@
   hosts: molecule_hosts
   gather_facts: no
   roles:
-      - amtega.packages
+    - amtega.packages
   tasks:
     - name: Get operating system packages facts
       package_facts:
@@ -23,7 +23,7 @@
           - >-
             ansible_facts.distribution_major_version is version("6", "==")
             or (ansible_facts.distribution_major_version is version("6", "!=")
-                and "tomcat" in packages)
+                and ("tomcat" in packages or "tomcat-native" in packages))
       vars:
         packages: "{{ ansible_facts.packages.keys() | list }}"
 
@@ -35,7 +35,7 @@
     - name: Get python packages facts in custon virtual environment
       command: "~/.ansible_venv/bin/pip list"
       changed_when: no
-      when: ansible_facts.distribution_major_version is version("29", "==")
+      when: ansible_facts.distribution_major_version is version("33", "==")
       register: pip_venv_result
 
     - name: Check python packages
@@ -80,7 +80,7 @@
   hosts: molecule_hosts
   gather_facts: no
   roles:
-      - amtega.packages
+    - amtega.packages
   tasks:
     - name: Check caching stuff
       assert:

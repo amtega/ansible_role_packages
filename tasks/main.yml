@@ -2,12 +2,14 @@
 # Role tasks
 
 - block:
-    - include_tasks: packages_os.yml
+    - name: Setup operating system packages
+      include_tasks: packages_os.yml
       when: packages_os_process_required
       tags:
-          - role::packages::os
+        - role::packages::os
 
-    - include_tasks: packages_python.yml
+    - name: Setup operating system packages
+      include_tasks: packages_python.yml
       when: packages_python_process_required
       tags:
         - role::packages::python

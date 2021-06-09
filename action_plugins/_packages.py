@@ -234,13 +234,13 @@ class ActionModule(ActionBase):
                     regex_group = re.compile("^   ")
 
                     gather_groups = False
-                    for l in lines:
-                        if regex_installed.match(l):
+                    for line in lines:
+                        if regex_installed.match(line):
                             gather_groups = True
-                        elif regex_available.match(l):
+                        elif regex_available.match(line):
                             gather_groups = False
-                        elif regex_group.match(l) and gather_groups:
-                            self.__groups_present.append("@" + l.strip())
+                        elif regex_group.match(line) and gather_groups:
+                            self.__groups_present.append("@" + line.strip())
 
         self.__packages_os_present = \
             self.__packages_os_present \
@@ -513,8 +513,14 @@ class ActionModule(ActionBase):
             else:
                 args = ""
 
-            cmd = "/usr/bin/virtualenv --python={python} {args} {virtualenv}"\
-                .format(python=python,
+            if self.__packages_python_virtualenv_command is not None:
+                virtualenv_cmd = self.__packages_python_virtualenv_command
+            else:
+                virtualenv_cmd = "/usr/bin/virtualenv"
+
+            cmd = "{virtualenv_cmd} --python={python} {args} {virtualenv}"\
+                .format(virtualenv_cmd=virtualenv_cmd,
+                        python=python,
                         args=args,
                         virtualenv=self.__packages_python_virtualenv)
 
