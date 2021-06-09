@@ -3,20 +3,22 @@
 
 galaxy_info:
   role_name: packages
+  namespace: amtega
   author: Juan Antonio Valiño García
   description: Setup packages based on the distribution name and major release
   company: AMTEGA - Xunta de Galicia
   license: GPLv3 or EUPL
-  min_ansible_version: 2.9
+  min_ansible_version: 2.10
   platforms:
     - name: EL
       versions:
         - 6
         - 7
+        - 8
     - name: Fedora
       versions:
-        - 29
-        - 30
+        - 33
+        - 34
   galaxy_tags:
     - system
     - packages
@@ -30,7 +32,7 @@ dependencies:
     vars:
       check_platform_distributions:
         centos: 6
-        fedora: 29
+        fedora: 33
         redhat: 6
 
   - role: amtega.proxy_client

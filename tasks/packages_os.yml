@@ -2,7 +2,8 @@
 # Setup operating system packages tasks
 
 - block:
-    - include_role:
+    - name: Setup EPEL
+      include_role:
         name: amtega.epel
       when: ansible_local.epel is undefined
 
