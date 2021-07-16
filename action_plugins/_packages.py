@@ -8,6 +8,7 @@ from ansible.plugins.action import ActionBase
 from ansible.plugins.filter.core import combine, to_json
 from ansible.plugins.test.core import version_compare
 from ansible.utils.display import Display
+from sys import version_info
 import json
 import re
 
@@ -129,8 +130,7 @@ class ActionModule(ActionBase):
 
     def _gather_python_info(self):
         """Gather python info"""
-        self.__python_version_major = \
-            self.__ansible_facts["python"]["version"]["major"]
+        self.__python_version_major = version_info.major
 
         self.__python_interpreter = "{virtualenv_path}/bin/python".format(
                         virtualenv_path=self.__packages_python_virtualenv)
@@ -565,85 +565,89 @@ class ActionModule(ActionBase):
         self.__changed = False
         self.__debug_info = dict()
 
-        self._gather()
+        try:
+            self._gather()
 
-        packages_to_manage = list()
+            packages_to_manage = list()
 
-        packages = self._get_packages_to_manage()
-        for package in packages:
-            name = package["name"]
-            state = package["state"]
-            virtualenv = package.get(
-                    "virtualenv",
-                    self.__packages_python_virtualenv)
-            virtualenv_command = package.get(
-                    "virtualenv_command",
-                    self.__packages_python_virtualenv_command)
-            virtualenv_python = package.get(
-                    "virtualenv_python",
-                    self.__packages_python_virtualenv_python)
-            virtualenv_site_packages = package.get(
-                    "virtualenv_site_packages",
-                    self.__packages_python_virtualenv_site_packages)
-            extra_args = package.get(
-                    "extra_args",
-                    self.__packages_python_extra_args)
+            packages = self._get_packages_to_manage()
+            for package in packages:
+                name = package["name"]
+                state = package["state"]
+                virtualenv = package.get(
+                        "virtualenv",
+                        self.__packages_python_virtualenv)
+                virtualenv_command = package.get(
+                        "virtualenv_command",
+                        self.__packages_python_virtualenv_command)
+                virtualenv_python = package.get(
+                        "virtualenv_python",
+                        self.__packages_python_virtualenv_python)
+                virtualenv_site_packages = package.get(
+                        "virtualenv_site_packages",
+                        self.__packages_python_virtualenv_site_packages)
+                extra_args = package.get(
+                        "extra_args",
+                        self.__packages_python_extra_args)
 
-            package_dict = self._get_package_spec(name,
-                                                  state,
-                                                  virtualenv,
-                                                  virtualenv_command,
-                                                  virtualenv_python,
-                                                  virtualenv_site_packages,
-                                                  extra_args)
+                package_dict = self._get_package_spec(name,
+                                                      state,
+                                                      virtualenv,
+                                                      virtualenv_command,
+                                                      virtualenv_python,
+                                                      virtualenv_site_packages,
+                                                      extra_args)
 
-            if package_dict is not None:
-                packages_to_manage = packages_to_manage + [package_dict]
+                if package_dict is not None:
+                    packages_to_manage = packages_to_manage + [package_dict]
 
-        action_result = dict(changed=self.__changed,
-                             packages=packages_to_manage)
+            action_result = dict(changed=self.__changed,
+                                 packages=packages_to_manage)
 
-        ansible_facts = dict(
-            _packages_capabilities_present=self.__capabilities_present,
-            _packages_groups_present=self.__groups_present,
-            packages=self.__package_facts
-        )
+            ansible_facts = dict(
+                _packages_capabilities_present=self.__capabilities_present,
+                _packages_groups_present=self.__groups_present,
+                packages=self.__package_facts
+            )
 
-        if self.__family == "os":
-            ansible_facts["_packages_os_managed"] = \
-                self.__packages_os_managed \
-                + packages_to_manage
-            action_result["module"] = self.__package_module
+            if self.__family == "os":
+                ansible_facts["_packages_os_managed"] = \
+                    self.__packages_os_managed \
+                    + packages_to_manage
+                action_result["module"] = self.__package_module
 
-        if self.__family == "python":
-            ansible_facts["_packages_python_managed"] = \
-                self.__packages_python_managed \
-                + packages_to_manage
-            ansible_facts["_packages_python_present"] = \
-                self.__packages_python_present
-            ansible_facts["_packages_virtualenv_exists"] = \
-                self.__packages_virtualenv_exists
-            ansible_facts["_packages_python_virtualenv"] = \
-                self.__packages_python_virtualenv
-            ansible_facts["packages_python_virtualenv_dir"] = \
-                "{path}/".format(path=self.__packages_python_virtualenv)
-            ansible_facts["packages_python_bin_dir"] = \
-                "{path}/bin/".format(path=self.__packages_python_virtualenv)
+            if self.__family == "python":
+                ansible_facts["_packages_python_managed"] = \
+                    self.__packages_python_managed \
+                    + packages_to_manage
+                ansible_facts["_packages_python_present"] = \
+                    self.__packages_python_present
+                ansible_facts["_packages_virtualenv_exists"] = \
+                    self.__packages_virtualenv_exists
+                ansible_facts["_packages_python_virtualenv"] = \
+                    self.__packages_python_virtualenv
+                ansible_facts["packages_python_virtualenv_dir"] = \
+                    "{path}/".format(path=self.__packages_python_virtualenv)
+                ansible_facts["packages_python_bin_dir"] = \
+                    "{path}/bin/".format(path=self.__packages_python_virtualenv)
 
-            action = self._action(
-                action="set_fact",
-                args=dict(
-                    ansible_python_interpreter=self.__python_interpreter))
-            action.run(task_vars=self.__task_vars)
+                action = self._action(
+                    action="set_fact",
+                    args=dict(
+                        ansible_python_interpreter=self.__python_interpreter))
+                action.run(task_vars=self.__task_vars)
 
-            action_result["python_interpreter"] = self.__python_interpreter
+                action_result["python_interpreter"] = self.__python_interpreter
 
-        if self.__ansible_facts_gathered:
-            ansible_facts = combine(self.__ansible_facts, ansible_facts)
+            if self.__ansible_facts_gathered:
+                ansible_facts = combine(self.__ansible_facts, ansible_facts)
 
-        if self.__packages_debug:
-            action_result["debug"] = self.__debug_info
+            if self.__packages_debug:
+                action_result["debug"] = self.__debug_info
 
-        action_result["ansible_facts"] = ansible_facts
+            action_result["ansible_facts"] = ansible_facts
+
+        finally:
+            self._remove_tmp_path(self._connection._shell.tmpdir)
 
         return action_result
