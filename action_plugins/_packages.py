@@ -131,7 +131,7 @@ class ActionModule(ActionBase):
     def _gather_python_info(self):
         """Gather python info"""
         self.__python_version_major = version_info.major
-    
+
         self.__python_interpreter = "{virtualenv_path}/bin/python".format(
                         virtualenv_path=self.__packages_python_virtualenv)
 
