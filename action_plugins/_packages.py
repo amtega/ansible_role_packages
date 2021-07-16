@@ -8,6 +8,7 @@ from ansible.plugins.action import ActionBase
 from ansible.plugins.filter.core import combine, to_json
 from ansible.plugins.test.core import version_compare
 from ansible.utils.display import Display
+from sys import version_info
 import json
 import re
 
@@ -129,9 +130,8 @@ class ActionModule(ActionBase):
 
     def _gather_python_info(self):
         """Gather python info"""
-        self.__python_version_major = \
-            self.__ansible_facts["python"]["version"]["major"]
-
+        self.__python_version_major = version_info.major
+    
         self.__python_interpreter = "{virtualenv_path}/bin/python".format(
                         virtualenv_path=self.__packages_python_virtualenv)
 
@@ -646,7 +646,7 @@ class ActionModule(ActionBase):
                 action_result["debug"] = self.__debug_info
 
             action_result["ansible_facts"] = ansible_facts
-            
+
         finally:
             self._remove_tmp_path(self._connection._shell.tmpdir)
 
