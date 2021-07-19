@@ -8,7 +8,6 @@ from ansible.plugins.action import ActionBase
 from ansible.plugins.filter.core import combine, to_json
 from ansible.plugins.test.core import version_compare
 from ansible.utils.display import Display
-from sys import version_info
 import json
 import re
 
@@ -51,16 +50,19 @@ class ActionModule(ActionBase):
 
     def _get_fact(self, name, default=None):
         """Get a fact"""
+
         result = self.__ansible_facts.get(name,
                                           self.__ansible_facts.get(default))
         return result
 
     def _gather_module_params(self):
         """Gather module parameters"""
+
         self.__family = self._task.args.get("family")
 
     def _gather_role_vars(self):
         """Gather role vars"""
+
         self.__packages_debug = \
             self._get_task_var("packages_debug", False)
 
@@ -98,7 +100,12 @@ class ActionModule(ActionBase):
         self.__packages_python_extra_args = \
             self._get_task_var("packages_python_extra_args", None)
 
+        self.__packages_python_source_install_dir = \
+            self._get_task_var("packages_python_source_install_dir", None)
+
     def _gather_facts(self):
+        """Gather facts"""
+
         self.__debug_info["facts_gathered"] = False
         self.__ansible_facts = self._get_task_var("ansible_facts", {})
         self.__ansible_facts_gathered = False
@@ -112,6 +119,7 @@ class ActionModule(ActionBase):
 
     def _gather_distribution_info(self):
         """Gather distribution info"""
+
         self.__distro_name = self._get_fact("ansible_distribution",
                                             "distribution").lower()
         self.__distro_name_alias = self.__packages_distribution_aliases.get(
@@ -123,6 +131,7 @@ class ActionModule(ActionBase):
 
     def _gather_packages_module(self):
         """Gather packages module"""
+
         if self.__distro_name in ["centos", "redhat"]:
             self.__package_module = "yum"
         else:
@@ -130,13 +139,16 @@ class ActionModule(ActionBase):
 
     def _gather_python_info(self):
         """Gather python info"""
-        self.__python_version_major = version_info.major
+
+        self.__python_version_major = \
+            self.__ansible_facts["python"]["version"]["major"]
 
         self.__python_interpreter = "{virtualenv_path}/bin/python".format(
                         virtualenv_path=self.__packages_python_virtualenv)
 
     def _gather_private_facts(self):
         """Gather private facts"""
+
         self.__packages_os_managed = \
             self.__ansible_facts.get("_packages_os_managed", [])
 
@@ -146,11 +158,16 @@ class ActionModule(ActionBase):
         self.__packages_virtualenv_exists = \
             self.__ansible_facts.get("_packages_virtualenv_exists", None)
 
+        self.__packages_virtualenv_needs_upgrade = \
+            self.__ansible_facts.get("__packages_virtualenv_needs_upgrade",
+                                     None)
+
         self.__packages_python_virtualenv_previous = \
             self.__ansible_facts.get("_packages_python_virtualenv", None)
 
     def _gather_package_management_info(self):
         """Gather package management info"""
+
         if self.__family == "os":
             self.__packages_to_manage = \
                 self.__packages_os
@@ -168,6 +185,7 @@ class ActionModule(ActionBase):
 
     def _gather_os_packages(self):
         """Gather os packages"""
+
         self.__packages_os_present = list()
 
         self.__debug_info["packages_os_gathered"] = False
@@ -190,6 +208,7 @@ class ActionModule(ActionBase):
 
     def _gather_os_packages_capabilites(self):
         """Gather los packages capabilities"""
+
         self.__capabilities_present = \
             self.__ansible_facts.get("_packages_capabilities_present", None)
 
@@ -212,6 +231,7 @@ class ActionModule(ActionBase):
 
     def _gather_os_packages_groups(self):
         """Gather os packages groups"""
+
         self.__groups_present = \
             self.__ansible_facts.get("_packages_groups_present", None)
 
@@ -252,28 +272,21 @@ class ActionModule(ActionBase):
 
     def _gather_python_os_packages(self):
         """Gather python os packages"""
+
         if version_compare(self.__distro_version, "7", ">="):
-            self.__pip_os_package = "python{version}-pip".format(
-                                version=str(self.__python_version_major))
+            self.__python_os_package = "python3"
+            self.__pip_os_package = "python3-pip"
+            self.__virtualenv_os_package = "python3-virtualenv"
+            self.__setup_tools_os_package = "python3-setuptools"
         else:
-            self.__pip_os_package = "python-pip"
-
-        if version_compare(self.__python_version_major, "3", "<"):
-            self.__virtualenv_os_package = "python-virtualenv"
-        else:
-            self.__virtualenv_os_package = \
-                "python{version}-virtualenv".format(
-                                version=str(self.__python_version_major))
-
-        if version_compare(self.__python_version_major, "3", "<"):
-            self.__setup_tools_os_package = "python-setuptools"
-        else:
-            self.__setup_tools_os_package = \
-                "python{version}-setuptools".format(
-                                version=str(self.__python_version_major))
+            self.__python_os_package = None
+            self.__pip_os_package = None
+            self.__virtualenv_os_package = None
+            self.__setup_tools_os_package = None
 
     def _gather_python_packages(self):
         """Gather python packages"""
+
         self.__packages_python_present = \
             self.__ansible_facts.get("_packages_python_present", None)
 
@@ -307,14 +320,30 @@ class ActionModule(ActionBase):
 
     def _gather_virtualenv_status(self):
         """Gather virtualenv status"""
+
         if self.__family == "python" \
            and self.__packages_virtualenv_exists is None:
-            path = self.__python_interpreter
-            result = self._execute_module(module_name="stat",
-                                          module_args=dict(path=path),
-                                          task_vars=self.__task_vars)
+            cmd = "{python} "\
+                  "-c 'from sys import version_info ; print(version_info[0])'"\
+                  .format(python=self.__python_interpreter)
 
-            self.__packages_virtualenv_exists = result["stat"]["exists"]
+            action = self._action(action="shell",
+                                  args=dict(_raw_params=cmd,
+                                            _uses_shell=False))
+            result = action.run(task_vars=self.__task_vars)
+
+            virtualenv_status_error = result.get("stderr", None)
+            virtualenv_status_major = result.get("stdout", None)
+            self.__packages_virtualenv_exists = False
+
+            if len(virtualenv_status_error) == 0:
+                self.__packages_virtualenv_exists = True
+
+            if len(virtualenv_status_major) > 0 \
+               and version_compare(virtualenv_status_major, "3", "<"):
+                self.__packages_virtualenv_needs_upgrade = True
+            else:
+                self.__packages_virtualenv_needs_upgrade = False
 
     def _normalize_structure(self, structure):
         """Return a normalized packages structure"""
@@ -385,21 +414,32 @@ class ActionModule(ActionBase):
 
     def _get_python_os_packages_structure(self):
         """Return struture for python os packages"""
-        if self.__pip_os_package \
-           not in self.__package_facts.keys():
+
+        if self.__python_os_package is not None \
+           and self.__python_os_package not in self.__package_facts.keys():
             self.__python_os_packages = \
-                [dict(name=self.__pip_os_package, state="present")]
+                [dict(name=self.__python_os_package,
+                      state="present")]
         else:
             self.__python_os_packages = list()
 
-        if self.__setup_tools_os_package \
-           not in self.__package_facts.keys():
+        if self.__pip_os_package is not None \
+           and self.__pip_os_package not in self.__package_facts.keys():
+            self.__python_os_packages = \
+                self.__python_os_packages \
+                + [dict(name=self.__pip_os_package,
+                        state="present")]
+
+        if self.__setup_tools_os_package is not None \
+           and self.__setup_tools_os_package \
+                not in self.__package_facts.keys():
             self.__python_os_packages = \
                 self.__python_os_packages \
                 + [dict(name=self.__setup_tools_os_package,
                         state="present")]
 
-        if self.__virtualenv_os_package not in self.__package_facts.keys():
+        if self.__virtualenv_os_package is not None \
+           and self.__virtualenv_os_package not in self.__package_facts.keys():
             self.__python_os_packages = \
                self.__python_os_packages \
                + [dict(name=self.__virtualenv_os_package,
@@ -447,6 +487,7 @@ class ActionModule(ActionBase):
 
     def _get_packages_to_manage(self):
         """Get packages to manage"""
+
         packages_spec = self._combine_structures(
                             [json.loads(to_json(self.__packages_to_manage))]
                             + self.__packages_to_manage_hostvars)
@@ -495,18 +536,33 @@ class ActionModule(ActionBase):
 
     def _setup_virtualenv(self):
         """Setup virtualenv"""
+
         self.__debug_info["virtualenv_created"] = False
         if self.__family == "python" \
-           and not self.__packages_virtualenv_exists:
+           and (not self.__packages_virtualenv_exists
+                or self.__packages_virtualenv_needs_upgrade):
+
+            if self.__packages_virtualenv_needs_upgrade:
+                result = self._execute_module(
+                        module_name="file",
+                        module_args=dict(
+                                        path=self.__packages_python_virtualenv,
+                                        state="absent"),
+                        task_vars=self.__task_vars)
+
+                if result.get("failed", False):
+                    raise AnsibleError("Failed to remove virtualenv")
+
+                self.__packages_virtualenv_needs_upgrade = False
 
             if self.__packages_python_virtualenv_python is not None:
                 python = self.__packages_python_virtualenv_python
             else:
-                if version_compare(self.__python_version_major, "3", "<"):
-                    suffix = ""
+                if version_compare(self.__distro_version, "7", "<"):
+                    python = "{path}/bin/python3".format(
+                            path=self.__packages_python_source_install_dir)
                 else:
-                    suffix = str(self.__python_version_major)
-                python = "/usr/bin/python{suffix}".format(suffix=suffix)
+                    python = "/usr/bin/python3"
 
             if self.__packages_python_virtualenv_site_packages:
                 args = "--system-site-packages"
@@ -516,9 +572,15 @@ class ActionModule(ActionBase):
             if self.__packages_python_virtualenv_command is not None:
                 virtualenv_cmd = self.__packages_python_virtualenv_command
             else:
-                virtualenv_cmd = "/usr/bin/virtualenv"
+                if version_compare(self.__distro_version, "7", ">="):
+                    virtualenv_cmd = "/usr/bin/virtualenv"
+                else:
+                    virtualenv_cmd = \
+                        self.__packages_python_source_install_dir \
+                        + "/bin/virtualenv"
 
-            cmd = "{virtualenv_cmd} --python={python} {args} {virtualenv}"\
+            cmd = "{virtualenv_cmd} " \
+                  "--python={python} {args} {virtualenv}" \
                 .format(virtualenv_cmd=virtualenv_cmd,
                         python=python,
                         args=args,
@@ -527,7 +589,10 @@ class ActionModule(ActionBase):
             action = self._action(action="shell",
                                   args=dict(_raw_params=cmd,
                                             _uses_shell=False))
-            result = action.run(task_vars=self.__task_vars)
+            task_vars = self.__task_vars
+            task_vars["ansible_python_interpreter"] = \
+                self.__packages_python_virtualenv_python
+            result = action.run(task_vars=task_vars)
 
             if result.get("failed", False):
                 raise AnsibleError("Failed to setup virtualenv")
@@ -538,6 +603,8 @@ class ActionModule(ActionBase):
             self.__changed = True
 
     def _gather(self, *args, **kwargs):
+        """Gather info"""
+
         self._gather_module_params()
         self._gather_role_vars()
         self._gather_facts()
@@ -558,6 +625,7 @@ class ActionModule(ActionBase):
 
     def run(self, tmp=None, task_vars=None):
         """Run the action module"""
+
         super(ActionModule, self).run(tmp, task_vars)
 
         self.__tmp = tmp
@@ -624,12 +692,15 @@ class ActionModule(ActionBase):
                     self.__packages_python_present
                 ansible_facts["_packages_virtualenv_exists"] = \
                     self.__packages_virtualenv_exists
+                ansible_facts["__packages_virtualenv_needs_upgrade"] = \
+                    self.__packages_virtualenv_needs_upgrade
                 ansible_facts["_packages_python_virtualenv"] = \
                     self.__packages_python_virtualenv
                 ansible_facts["packages_python_virtualenv_dir"] = \
                     "{path}/".format(path=self.__packages_python_virtualenv)
                 ansible_facts["packages_python_bin_dir"] = \
-                    "{path}/bin/".format(path=self.__packages_python_virtualenv)
+                    "{path}/bin/".format(
+                                        path=self.__packages_python_virtualenv)
 
                 action = self._action(
                     action="set_fact",

@@ -55,6 +55,7 @@ provisioner:
           package_name: "httpd"
           packages_debug: yes
           packages_load_from_hostvars: yes
+          packages_python_virtualenv: /var/lib/ansible/venv
           packages_os:
             centos:
               all:

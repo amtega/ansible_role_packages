@@ -1,0 +1,16 @@
+---
+# Setup python
+
+- block:
+    - name: Check python binary
+      stat:
+        path: "{{ packages_python_source_binary }}"
+      register: packages_python_source_binary_check_result
+
+    - name: Compile python
+      include_tasks: python_compile.yml
+      when: not packages_python_source_binary_check_result.stat.exists
+  tags:
+    - role::packages
+    - role::packages::os
+    - role::packages::python

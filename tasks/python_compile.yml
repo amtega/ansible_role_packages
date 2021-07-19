@@ -1,0 +1,107 @@
+---
+# Compile python
+
+- block:
+    - name: Gather packages facts
+      package_facts:
+
+    - name: Setup python compile directory
+      file:
+        path: "{{ packages_python_source_compile_dir }}"
+        state: directory
+        mode: "{{ packages_python_source_compile_dir_mode }}"
+
+    - name: Setup required packages to compile python
+      yum:
+        name: "{{ packages_python_sources_requirement_item }}"
+        state: present
+      loop: "{{ packages_python_source_required_packages }}"
+      loop_control:
+        loop_var: packages_python_sources_requirement_item
+
+    - name: Copy python source package
+      copy:
+        src: "{{  }}"
+        dest: "{{ packages_python_source_compile_dir }}"
+        mode: 0644
+        remote_src: "{{ _remote | bool }}"
+      when: packages_python_source_path | default("") | length > 0
+
+    - name: Download python source package
+      get_url:
+        dest: "{{ packages_python_source_compile_dir }}"
+        mode: 0644
+        timeout: "{{ packages_python_source_timeout }}"
+        url: "{{ packages_python_source_url }}"
+        validate_certs: >-
+          {{ packages_python_source_validate_certs | bool }}
+      when: packages_python_source_path | default("") | length == 0
+
+    - name: Unarchive python source package
+      unarchive:
+        src: "{{ packages_python_source_full_path }}"
+        remote_src: yes
+        dest: "{{ packages_python_source_compile_dir }}"
+        creates: "{{ packages_python_source_dir }}"
+
+    - name: Configure python source
+      command: >-
+        ./configure
+        --enable-optimizations
+        --prefix={{ packages_python_source_install_dir }}
+      args:
+        chdir: "{{ packages_python_source_dir }}"
+
+    - name: Compile and install python
+      command: make install
+      args:
+        chdir: "{{ packages_python_source_dir }}"
+
+    - name: Restore required packages to compile python to previous state
+      yum:
+        name: "{{ packages_python_sources_requirement_item }}"
+        state: absent
+      loop: >-
+        {{ packages_python_source_required_packages
+           | difference(ansible_facts.packages.keys())
+           | list }}
+      loop_control:
+        loop_var: packages_python_sources_requirement_item
+
+    - name: Remove python source artifacts
+      file:
+        path: "{{ packages_python_source_artifact_item }}"
+        state: absent
+      loop:
+        - "{{ packages_python_source_full_path }}"
+        - "{{ packages_python_source_dir }}"
+      loop_control:
+        loop_var: packages_python_source_artifact_item
+
+    - name: Install virtualenv
+      pip:
+        name: virtualenv
+        state: present
+        executable: >-
+          {{ packages_python_source_install_dir
+             + "/bin/pip"
+             + packages_python_source_version_major_minor }}
+
+  environment: >-
+    {{ proxy_client_environment
+       | default({})
+       | combine(packages_tmp_dir_environment) }}
+
+  vars:
+    packages_python_source_required_packages:
+      - bzip2-devel
+      - gcc
+      - gzip
+      - tar
+      - openssl-devel
+
+  tags:
+    - role::packages
+    - role::packages::os
+    - role::packages::python
+    - role::packages::python::compile
