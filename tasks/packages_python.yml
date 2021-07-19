@@ -47,6 +47,9 @@
         LANGUAGE: en_US.utf8
         LANG: en_US.utf8
         LC_ALL: en_US.utf8
+      vars:
+        ansible_python_interpreter: >-
+          {{ packages_python_process_result.python_interpreter }}
 
     - name: Setup ansible python interpreter
       set_fact:
