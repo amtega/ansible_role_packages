@@ -172,3 +172,47 @@ packages_python_load_from_hostvars: "{{ packages_load_from_hostvars }}"
 # flag
 
 packages_tmp_dir: /tmp
+
+# If you want to install python packages ansible requires python version 3.5 or
+# greather, that is not available for CentOS/RHEL 6. To workaround this problem
+# below you can specify the download options to setup python from sources.
+# The download can be done from a path (in the control machine or the managed
+# host) or from a http url.
+
+# Path to the python source package. Can be a control machine path or host path
+# (see packages_python_source_path_remote variable below). If not given, the
+# http url download method will be used
+
+#packages_python_source_path:
+
+# Indicate if packages_python_source_path is on the control machine path (value
+# no) or the managed host (value yes)
+
+packages_python_source_path_remote: no
+
+# Python source URL. Setup to an URL where to download python source package
+
+packages_python_source_url: >-
+  https://www.python.org/ftp/python/3.5.9/Python-3.5.9.tgz
+
+# Timeout to download python source from url
+
+packages_python_source_timeout: 60
+
+# Validate or not certificates from python source url
+
+packages_python_source_validate_certs: yes
+
+# Path where to download python source and do compilation tasks
+
+packages_python_source_compile_dir: /var/lib/ansible
+
+# Mode for packages_python_source_compile_dir
+
+packages_python_source_compile_dir_mode: 0755
+
+# Where to install compiled python. The variable packages_python_source_version
+# contains the version compiled
+
+packages_python_source_install_dir: >-
+  /var/lib/ansible/python-{{ packages_python_source_version }}

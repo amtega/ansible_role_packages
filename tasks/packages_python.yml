@@ -2,6 +2,12 @@
 # Setup python packages tasks
 
 - block:
+    - name: Setup python
+      include_tasks: python.yml
+      when:
+        - ansible_facts.distribution | lower in ["centos", "redhat"]
+        - ansible_facts.distribution_major_version is version("7", "<")
+
     - name: Determine python packages to be managed and setup virtualenv
       _packages:
         family: python
@@ -37,6 +43,10 @@
         loop_var: package
         label: "{{ package.name }} {{ package.state }}"
       notify: "{{ packages_python_notify }}"
+      environment:
+        LANGUAGE: en_US.utf8
+        LANG: en_US.utf8
+        LC_ALL: en_US.utf8
 
     - name: Setup ansible python interpreter
       set_fact:

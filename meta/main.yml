@@ -66,6 +66,7 @@ dependencies:
              + "bin_dir|"
              + "process_result|"
              + "setup_result|"
+             + "source_binary_check_result|"
              + "result).*$" }}
         fact_name: packages_python_hostvars
         output_type: list

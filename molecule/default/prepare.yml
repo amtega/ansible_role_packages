@@ -1,6 +1,27 @@
 ---
 
 - name: Prepare
+  hosts:
+    - molecule_hosts_centos_6
+    - molecule_hosts_centos_7
+  gather_facts: no
+  roles:
+    - amtega.epel
+  tasks:
+    - name: Setup virtualenv package
+      package:
+        name: python-virtualenv
+        state: present
+
+    - name: Setup virtualenv pointing to python2
+      command: >-
+        /usr/bin/virtualenv
+        --python=/usr/bin/python
+        --system-site-packages
+        {{ packages_python_virtualenv }}
+      changed_when: yes
+
+- name: Prepare
   hosts: molecule_hosts_centos_8
   gather_facts: no
   roles:

@@ -21,3 +21,28 @@ packages_enable_plugin_value: >-
 
 packages_tmp_dir_environment:
   TMPDIR: "{{ packages_tmp_dir }}"
+
+packages_python_source_filename: >-
+  {{ packages_python_source_url | urlsplit("path") | basename }}
+
+packages_python_source_full_path: >-
+  {{ packages_python_source_compile_dir }}/{{ packages_python_source_filename }}
+
+packages_python_source_dir: >-
+  {{ packages_python_source_full_path
+     | splitext
+     | first }}
+
+packages_python_source_version: >-
+  {{ packages_python_source_filename
+     | splitext
+     | first
+     | regex_replace(".*-([0-9]+\.[0-9]+\.[0-9]+)", "\1") }}
+
+packages_python_source_version_major_minor: >-
+  {{ packages_python_source_version.split(".")[0:2] | join(".") }}
+
+packages_python_source_binary: >-
+  {{ packages_python_source_install_dir
+     + "/bin/python"
+     +  packages_python_source_version_major_minor }}
