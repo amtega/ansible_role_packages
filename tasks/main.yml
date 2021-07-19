@@ -2,6 +2,9 @@
 # Role tasks
 
 - block:
+    - name: Gather facts
+      include_tasks: facts.yml
+
     - name: Setup operating system packages
       include_tasks: packages_os.yml
       when: packages_os_process_required

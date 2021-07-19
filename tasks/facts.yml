@@ -1,0 +1,9 @@
+---
+# Gather facts
+
+- name: Gather facts
+  setup:
+  when: ansible_facts.python_version is not defined
+  tags:
+    - role::packages
+    - role::packages::facts
