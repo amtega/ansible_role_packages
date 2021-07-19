@@ -572,7 +572,9 @@ class ActionModule(ActionBase):
             if self.__packages_python_virtualenv_command is not None:
                 virtualenv_cmd = self.__packages_python_virtualenv_command
             else:
-                if version_compare(self.__distro_version, "7", ">="):
+                if version_compare(self.__distro_version, "7", "="):
+                    virtualenv_cmd = "/usr/bin/virtualenv-3"
+                elif version_compare(self.__distro_version, "7", ">"):
                     virtualenv_cmd = "/usr/bin/virtualenv"
                 else:
                     virtualenv_cmd = \
@@ -589,9 +591,11 @@ class ActionModule(ActionBase):
             action = self._action(action="shell",
                                   args=dict(_raw_params=cmd,
                                             _uses_shell=False))
-            task_vars = self.__task_vars
+
+            task_vars = self.__task_vars.copy()
             task_vars["ansible_python_interpreter"] = \
                 self.__packages_python_virtualenv_python
+
             result = action.run(task_vars=task_vars)
 
             if result.get("failed", False):
