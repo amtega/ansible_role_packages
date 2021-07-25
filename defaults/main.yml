@@ -64,6 +64,14 @@
 
 packages_os: {}
 
+# List of handlers to notify when there are changes on operating system packages
+
+packages_os_notify: []
+
+# Force operating system packages tasks even though is not necesary
+
+packages_os_force: "{{ packages_force }}"
+
 # Dictionary with the python packages to manage for each distribution name/major
 # release combination. The structure of the dict is the same that for the
 # variable `packages_os`.
@@ -102,6 +110,14 @@ packages_os: {}
 
 packages_python: {}
 
+# List of handlers to notify when there are changes on python packages
+
+packages_python_notify: []
+
+# Force python packages tasks even though is not necesary
+
+packages_python_force: "{{ packages_force }}"
+
 # Global extra arguments for the python pip tool if no other ones are specified
 # in the package config. See `packages_python` documentation before
 
@@ -129,14 +145,6 @@ packages_python_set_ansible_interpreter: yes
 
 packages_distribution_aliases:
   redhat: rhel
-
-# List of handlers to notify when there are changes on operating system packages
-
-packages_os_notify: []
-
-# List of handlers to notify when there are changes on python packages
-
-packages_python_notify: []
 
 # List of plugins to disable
 
@@ -172,6 +180,11 @@ packages_python_load_from_hostvars: "{{ packages_load_from_hostvars }}"
 # flag
 
 packages_tmp_dir: /tmp
+
+# Force tasks even though is not necesary. You can tune what tasks to force
+# using packages_force_os and packages_force_python
+
+packages_force: no
 
 # If you want to install python packages ansible requires python version 3.5 or
 # greather, that is not available for CentOS/RHEL 6. To workaround this problem
