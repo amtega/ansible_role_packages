@@ -4,6 +4,10 @@
 - name: Setup operating system packages
   yum:
     disable_plugin: "{{ packages_disable_plugin_value }}"
+    disable_gpg_check: >-
+      {{ package.disable_gpg_check
+         | default(packages_disable_gpg_check)
+         | default(omit) }}
     enable_plugin: "{{ packages_enable_plugin_value }}"
     name: "{{ package.name }}"
     state: "{{ package.state }}"
