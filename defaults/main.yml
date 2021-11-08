@@ -61,6 +61,11 @@
 #         state: <state>
 #    ...
 # }
+#
+# The list of dicts structure detailed before also supports the following
+# additional attributes:
+#
+# disable_gpg_check: <yes_no>       # Disable or not gpg check
 
 packages_os: {}
 
@@ -145,6 +150,10 @@ packages_python_set_ansible_interpreter: yes
 
 packages_distribution_aliases:
   redhat: rhel
+
+# Disable gpg check
+
+packages_disable_gpg_check: no
 
 # List of plugins to disable
 
