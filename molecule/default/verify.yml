@@ -35,7 +35,7 @@
     - name: Get python packages facts in custon virtual environment
       command: "~/.ansible_venv/bin/pip list"
       changed_when: no
-      when: ansible_facts.distribution_major_version is version("33", "==")
+      when: ansible_facts.distribution_major_version is version("34", "==")
       register: pip_venv_result
 
     - name: Check python packages
@@ -49,7 +49,7 @@
                 and pip_output is search("lxml"))
       vars:
         pip_output: >-
-          {{ (ansible_facts.distribution_major_version is version("33", "=="))
+          {{ (ansible_facts.distribution_major_version is version("34", "=="))
              | ternary(pip_venv_result.stdout | default(""),
                        pip_result.stdout) }}
 

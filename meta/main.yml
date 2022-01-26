@@ -17,8 +17,8 @@ galaxy_info:
         - 8
     - name: Fedora
       versions:
-        - 33
         - 34
+        - 35
   galaxy_tags:
     - system
     - packages
@@ -32,7 +32,7 @@ dependencies:
     vars:
       check_platform_distributions:
         centos: 6
-        fedora: 33
+        fedora: 34
         redhat: 6
 
   - role: amtega.proxy_client
