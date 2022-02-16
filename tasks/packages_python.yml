@@ -4,9 +4,7 @@
 - block:
     - name: Setup python
       include_tasks: python.yml
-      when:
-        - ansible_facts.distribution | lower in ["centos", "redhat"]
-        - ansible_facts.distribution_major_version is version("7", "<")
+      when: ansible_facts.distribution_major_version is version("7", "<")
 
     - name: Determine python packages to be managed and setup virtualenv
       _packages:
