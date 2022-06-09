@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.18.0] - 2022-06-09
+### Changed
+- Migrated tests to podman
+- Moved dependencies to include file to avoid race conditions with hosts vars.
+
+### Fixed
+- Fixed typo.
+
 ## [1.17.0] - 2022-02-16
 ### Changed
 - Adapted for CentOS derived distros. Related to ansible/main#263
