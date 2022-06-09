@@ -382,7 +382,7 @@ class ActionModule(ActionBase):
         return normalized_structure
 
     def _combine_structures(self, structures):
-        """Combine the a list of packags structures into one dict
+        """Combine the list of packags structures into one dict
 
         Args:
             structures (list): dicts with packages structures to combine
