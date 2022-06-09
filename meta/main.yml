@@ -36,38 +36,13 @@ dependencies:
         redhat: 6
 
   - role: amtega.proxy_client
-    vars:
-      proxy_client_permanent: no
+    tags:
+      - never
 
   - role: amtega.select_hostvars
-    vars:
-      select_hostvars_query:
-        pattern: "^packages_os_.*"
-        exclude_pattern: >-
-          {{ "^packages_os_("
-             + "load_from_hostvars|"
-             + "process_result|"
-             + "setup_result|"
-             + "result)$" }}
-        fact_name: packages_os_hostvars
-        output_type: list
-    when: packages_os_load_from_hostvars | bool
+    tags:
+      - never
 
   - role: amtega.select_hostvars
-    vars:
-      select_hostvars_query:
-        pattern: "^packages_python_.*"
-        exclude_pattern: >-
-          {{ "^packages_python_("
-             + "load_from_hostvars|"
-             + "virtualenv|"
-             + "extra_args|"
-             + "set_ansible_interpreter|"
-             + "bin_dir|"
-             + "process_result|"
-             + "setup_result|"
-             + "source_binary_check_result|"
-             + "result).*$" }}
-        fact_name: packages_python_hostvars
-        output_type: list
-    when: packages_python_load_from_hostvars | bool
+    tags:
+      - never
