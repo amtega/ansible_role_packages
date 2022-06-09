@@ -2,6 +2,9 @@
 # Role tasks
 
 - block:
+    - name: Setup prerequisites
+      include_tasks: prerequisites.yml
+
     - name: Gather facts
       include_tasks: facts.yml
 
