@@ -12,7 +12,8 @@
         family: os
       register: packages_os_process_result
 
-    - include_tasks: "packages_os_{{ packages_os_process_result.module }}.yml"
+    - ansible.builtin.include_tasks: >-
+        packages_os_{{ packages_os_process_result.module }}.yml
 
     - name: Setup fact with operating packages setup result
       ansible.builtin.set_fact:

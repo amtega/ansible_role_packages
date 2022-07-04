@@ -9,7 +9,7 @@
       register: packages_python_source_binary_check_result
 
     - name: Compile python
-      include_tasks: python_compile.yml
+      ansible.builtin.include_tasks: python_compile.yml
       when: not packages_python_source_binary_check_result.stat.exists
   tags:
     - role::packages
