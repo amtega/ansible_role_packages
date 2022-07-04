@@ -1,18 +1,18 @@
 ---
-# Compile python
 
-- block:
+- name: Compile python
+  block:
     - name: Gather packages facts
-      package_facts:
+      ansible.builtin.package_facts:
 
     - name: Setup python compile directory
-      file:
+      ansible.builtin.file:
         path: "{{ packages_python_source_compile_dir }}"
         state: directory
         mode: "{{ packages_python_source_compile_dir_mode }}"
 
     - name: Setup required packages to compile python
-      yum:
+      ansible.builtin.yum:
         name: "{{ packages_python_sources_requirement_item }}"
         state: present
       loop: "{{ packages_python_source_required_packages }}"
@@ -20,7 +20,7 @@
         loop_var: packages_python_sources_requirement_item
 
     - name: Copy python source package
-      copy:
+      ansible.builtin.copy:
         src: "{{  }}"
         dest: "{{ packages_python_source_compile_dir }}"
         mode: 0644
@@ -28,7 +28,7 @@
       when: packages_python_source_path | default("") | length > 0
 
     - name: Download python source package
-      get_url:
+      ansible.builtin.get_url:
         dest: "{{ packages_python_source_compile_dir }}"
         mode: 0644
         timeout: "{{ packages_python_source_timeout }}"
@@ -38,27 +38,29 @@
       when: packages_python_source_path | default("") | length == 0
 
     - name: Unarchive python source package
-      unarchive:
+      ansible.builtin.unarchive:
         src: "{{ packages_python_source_full_path }}"
         remote_src: yes
         dest: "{{ packages_python_source_compile_dir }}"
         creates: "{{ packages_python_source_dir }}"
 
     - name: Configure python source
-      command: >-
+      ansible.builtin.command: >-
         ./configure
         --enable-optimizations
         --prefix={{ packages_python_source_install_dir }}
       args:
         chdir: "{{ packages_python_source_dir }}"
+      changed_when: yes
 
     - name: Compile and install python
-      command: make install
+      ansible.builtin.command: make install
       args:
         chdir: "{{ packages_python_source_dir }}"
+      changed_when: yes
 
     - name: Restore required packages to compile python to previous state
-      yum:
+      ansible.builtin.yum:
         name: "{{ packages_python_sources_requirement_item }}"
         state: absent
       loop: >-
@@ -69,7 +71,7 @@
         loop_var: packages_python_sources_requirement_item
 
     - name: Remove python source artifacts
-      file:
+      ansible.builtin.file:
         path: "{{ packages_python_source_artifact_item }}"
         state: absent
       loop:
@@ -79,19 +81,14 @@
         loop_var: packages_python_source_artifact_item
 
     - name: Install virtualenv
-      pip:
+      ansible.builtin.pip:
         name: virtualenv
         state: present
         executable: >-
           {{ packages_python_source_install_dir
              + "/bin/pip"
              + packages_python_source_version_major_minor }}
-
-  environment: >-
-    {{ proxy_client_environment
-       | default({})
-       | combine(packages_tmp_dir_environment) }}
-
+  environment: "{{ packages_environment }}"
   vars:
     packages_python_source_required_packages:
       - bzip2-devel
@@ -99,7 +96,6 @@
       - gzip
       - tar
       - openssl-devel
-
   tags:
     - role::packages
     - role::packages::os

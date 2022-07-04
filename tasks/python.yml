@@ -1,9 +1,10 @@
 ---
 # Setup python
 
-- block:
+- name: Setup python
+  block:
     - name: Check python binary
-      stat:
+      ansible.builtin.stat:
         path: "{{ packages_python_source_binary }}"
       register: packages_python_source_binary_check_result
 

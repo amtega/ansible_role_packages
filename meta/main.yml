@@ -8,17 +8,17 @@ galaxy_info:
   description: Setup packages based on the distribution name and major release
   company: AMTEGA - Xunta de Galicia
   license: GPLv3 or EUPL
-  min_ansible_version: 2.10
+  min_ansible_version: "2.10"
   platforms:
     - name: EL
       versions:
-        - 6
-        - 7
-        - 8
+        - "6"
+        - "7"
+        - "8"
     - name: Fedora
       versions:
-        - 34
-        - 35
+        - "34"
+        - "35"
   galaxy_tags:
     - system
     - packages
