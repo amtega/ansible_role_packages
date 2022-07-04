@@ -7,10 +7,10 @@
     - amtega.packages
   tasks:
     - name: Get operating system packages facts
-      package_facts:
+      ansible.builtin.package_facts:
 
     - name: Check operating system packages
-      assert:
+      ansible.builtin.assert:
         that:
           - >-
             "httpd" in packages
@@ -28,18 +28,19 @@
         packages: "{{ ansible_facts.packages.keys() | list }}"
 
     - name: Get python packages facts
-      command: "{{ ansible_facts.packages_python_bin_dir }}pip list"
+      ansible.builtin.command: >-
+        {{ ansible_facts.packages_python_bin_dir }}pip list
       changed_when: no
       register: pip_result
 
     - name: Get python packages facts in custon virtual environment
-      command: "~/.ansible_venv/bin/pip list"
+      ansible.builtin.command: "~/.ansible_venv/bin/pip list"
       changed_when: no
       when: ansible_facts.distribution_major_version is version("34", "==")
       register: pip_venv_result
 
     - name: Check python packages
-      assert:
+      ansible.builtin.assert:
         that:
           - pip_output is search("pexpect")
 
@@ -54,7 +55,7 @@
                        pip_result.stdout) }}
 
     - name: Check facts
-      assert:
+      ansible.builtin.assert:
         that:
           - >-
             (ansible_facts["_packages_capabilities_present"] | length > 0
@@ -83,7 +84,7 @@
     - amtega.packages
   tasks:
     - name: Check caching stuff
-      assert:
+      ansible.builtin.assert:
         that:
           - not packages_os_process_result.debug.facts_gathered
           - not packages_os_process_result.debug.packages_os_gathered
@@ -97,12 +98,12 @@
   gather_facts: no
   tasks:
     - name: Gather virtualenv python version
-      command: >-
+      ansible.builtin.command: >-
         {{ packages_python_virtualenv }}/bin/python
         -c 'from sys import version_info ; print(version_info[0])'
       register: gather_python_version_result
       changed_when: no
 
     - name: Assert python was migrated
-      assert:
+      ansible.builtin.assert:
         that: gather_python_version_result.stdout is version("3", ">=")
