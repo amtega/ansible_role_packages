@@ -1,8 +1,7 @@
 ---
-# Gather facts
 
 - name: Gather facts
-  setup:
+  ansible.builtin.setup:
   when: ansible_facts.python_version is not defined
   tags:
     - role::packages

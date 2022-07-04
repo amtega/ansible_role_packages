@@ -9,12 +9,12 @@
     - amtega.epel
   tasks:
     - name: Setup virtualenv package
-      package:
+      ansible.builtin.package:
         name: python-virtualenv
         state: present
 
     - name: Setup virtualenv pointing to python2
-      command: >-
+      ansible.builtin.command: >-
         /usr/bin/virtualenv
         --python=/usr/bin/python
         --system-site-packages
@@ -28,10 +28,10 @@
     - amtega.epel
   tasks:
     - name: Install dnf plugins core
-      package:
+      ansible.builtin.package:
         name: dnf-plugins-core
         state: present
 
     - name: Enable powertools repository
-      command: dnf config-manager --set-enabled powertools
+      ansible.builtin.command: dnf config-manager --set-enabled powertools
       when: yes

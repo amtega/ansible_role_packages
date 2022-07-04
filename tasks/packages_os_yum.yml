@@ -1,8 +1,7 @@
 ---
-# Setup operating system packages with yum tasks
 
-- name: Setup operating system packages
-  yum:
+- name: Setup operating system packages with yum
+  ansible.builtin.yum:
     disable_plugin: "{{ packages_disable_plugin_value }}"
     disable_gpg_check: >-
       {{ package.disable_gpg_check
@@ -18,10 +17,7 @@
     label: >-
       {{ package.name | default('') }} {{ package.state | default('') }}
   notify: "{{ packages_os_notify }}"
-  environment: >-
-    {{ proxy_client_environment
-       | default({})
-       | combine(packages_tmp_dir_environment) }}
+  environment: "{{ packages_environment }}"
   tags:
     - role::packages
     - role::packages::os

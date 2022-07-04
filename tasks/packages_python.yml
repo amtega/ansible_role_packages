@@ -1,9 +1,9 @@
 ---
-# Setup python packages tasks
 
-- block:
+- name: Setup python packages
+  block:
     - name: Setup python
-      include_tasks: python.yml
+      ansible.builtin.include_tasks: python.yml
       when: ansible_facts.distribution_major_version is version("7", "<")
 
     - name: Determine python packages to be managed and setup virtualenv
@@ -12,7 +12,7 @@
       register: packages_python_process_result
 
     - name: Setup python packages
-      pip:
+      ansible.builtin.pip:
         name: "{{ package.name }}"
         state: "{{ package.state }}"
         virtualenv: >-
@@ -50,20 +50,16 @@
           {{ packages_python_process_result.python_interpreter }}
 
     - name: Setup ansible python interpreter
-      set_fact:
+      ansible.builtin.set_fact:
         ansible_python_interpreter: >-
           {{ packages_python_process_result.python_interpreter }}
       when: packages_python_set_ansible_interpreter | bool
 
     - name: Setup fact with python packages setup result
-      set_fact:
+      ansible.builtin.set_fact:
         packages_python_result: >-
           {{ packages_python_setup_result | default({}) }}
       when: packages_python_process_result.packages | length > 0
-
-  environment: >-
-    {{ proxy_client_environment
-       | default({})
-       | combine(packages_tmp_dir_environment) }}
+  environment: "{{ packages_environment }}"
   tags:
     - role::packages::python

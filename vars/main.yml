@@ -48,3 +48,42 @@ packages_python_source_binary: >-
   {{ packages_python_source_install_dir
      + "/bin/python"
      +  packages_python_source_version_major_minor }}
+
+packages_environment: >-
+  {{ proxy_client_environment
+     | default({})
+     | combine(packages_tmp_dir_environment) }}
+
+# Workaround to avoid false linter positive
+
+packages_pipe: "|"
+
+packages_os_exclude_pattern: >-
+  {{ "^packages_os_("
+      + "load_from_hostvars"
+      + packages_pipe
+      + "process_result"
+      + packages_pipe
+      + "setup_result"
+      + packages_pipe
+      + "result)$" }}
+
+packages_python_exclude_pattern: >-
+  {{ "^packages_python_("
+      + "load_from_hostvars"
+      + packages_pipe
+      + "virtualenv"
+      + packages_pipe
+      + "extra_args"
+      + packages_pipe
+      + "set_ansible_interpreter"
+      + packages_pipe
+      + "bin_dir"
+      + packages_pipe
+      + "process_result"
+      + packages_pipe
+      + "setup_result"
+      + packages_pipe
+      + "source_binary_check_result"
+      + packages_pipe
+      + "result).*$" }}
