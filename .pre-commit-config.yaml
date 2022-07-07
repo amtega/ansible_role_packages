@@ -1,0 +1,6 @@
+---
+repos:
+  - hooks:
+      - id: commitizen
+    repo: https://github.com/commitizen-tools/commitizen
+    rev: master
