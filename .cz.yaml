@@ -1,5 +1,5 @@
 commitizen:
+  changelog_start_rev: 1.18.1
   name: cz_conventional_commits
   tag_format: $version
-  version: 1.18.1
-  changelog_start_rev: 2.0.0
+  version: 2.0.0
