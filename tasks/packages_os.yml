@@ -1,5 +1,4 @@
 ---
-
 - name: Setup operating system packages
   block:
     - name: Setup EPEL
