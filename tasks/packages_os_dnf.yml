@@ -1,5 +1,4 @@
 ---
-
 - name: Setup operating system packages with dnf
   ansible.builtin.dnf:
     disable_plugin: "{{ packages_disable_plugin_value }}"

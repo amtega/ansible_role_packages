@@ -1,5 +1,4 @@
 ---
-
 - name: Setup python packages
   block:
     - name: Setup python

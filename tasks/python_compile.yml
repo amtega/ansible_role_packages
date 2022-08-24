@@ -1,10 +1,8 @@
 ---
-
 - name: Compile python
   block:
     - name: Gather packages facts
       ansible.builtin.package_facts:
-
     - name: Setup python compile directory
       ansible.builtin.file:
         path: "{{ packages_python_source_compile_dir }}"
@@ -21,7 +19,7 @@
 
     - name: Copy python source package
       ansible.builtin.copy:
-        src: "{{  }}"
+        src: "{{ }}"
         dest: "{{ packages_python_source_compile_dir }}"
         mode: 0644
         remote_src: "{{ _remote | bool }}"
