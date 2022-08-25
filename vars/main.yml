@@ -47,7 +47,7 @@ packages_python_source_version_major_minor: >-
 packages_python_source_binary: >-
   {{ packages_python_source_install_dir
      + "/bin/python"
-     +  packages_python_source_version_major_minor }}
+     + packages_python_source_version_major_minor }}
 
 packages_environment: >-
   {{ proxy_client_environment

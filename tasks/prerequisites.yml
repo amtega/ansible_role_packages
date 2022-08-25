@@ -1,5 +1,4 @@
 ---
-
 - name: Setup proxy client
   ansible.builtin.include_role:
     name: amtega.proxy_client
@@ -12,7 +11,7 @@
   when: packages_os_load_from_hostvars | bool
   vars:
     select_hostvars_query:
-      pattern: "^packages_os_.*"
+      pattern: ^packages_os_.*
       exclude_pattern: "{{ packages_os_exclude_pattern }}"
       fact_name: packages_os_hostvars
       output_type: list
@@ -23,7 +22,7 @@
   when: packages_python_load_from_hostvars | bool
   vars:
     select_hostvars_query:
-      pattern: "^packages_python_.*"
+      pattern: ^packages_python_.*
       exclude_pattern: "{{ packages_python_exclude_pattern }}"
       fact_name: packages_python_hostvars
       output_type: list
