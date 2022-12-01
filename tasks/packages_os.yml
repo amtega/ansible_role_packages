@@ -1,10 +1,13 @@
 ---
+
 - name: Setup operating system packages
   block:
     - name: Setup EPEL
       ansible.builtin.include_role:
         name: amtega.epel
-      when: ansible_local.epel is undefined
+      when:
+        - ansible_facts.distribution_major_version is version("7", "==")
+        - ansible_local.epel is undefined
 
     - name: Determine operating system packages to be managed
       _packages:

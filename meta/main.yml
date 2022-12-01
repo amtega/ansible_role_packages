@@ -43,6 +43,6 @@ dependencies:
     tags:
       - never
 
-  - role: amtega.select_hostvars
+  - role: amtega.epel
     tags:
       - never

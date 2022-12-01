@@ -1,0 +1,47 @@
+---
+
+- name: Setup operating system packages with legacy command
+  # noqa command-instead-of-shell
+  ansible.builtin.shell: >-
+    {{ packages_yum_state_command_map[packages_package_item.state] }}
+  args:
+    warn: no
+  register: packages_os_setup_result
+  changed_when: packages_os_setup_result.stdout is search("Running transaction")
+  loop: "{{ packages_os_process_result.packages }}"
+  loop_control:
+    loop_var: packages_package_item
+    label: >-
+      {{ packages_package_item.name | default("") }}
+      {{ packages_package_item.state | default("") }}
+  vars:
+    packages_yum_plugin_args: >-
+      --disableplugin="{{ packages_disable_plugin_value }}"
+      --enableplugin="{{ packages_enable_plugin_value }}"
+    packages_yum_nogpg_flag: >-
+      {{ (packages_package_item.disable_gpg_chece
+          | default(packages_disable_gpg_check)
+          | bool)
+         | ternary("--nogpgcheck", "") }}
+    packages_yum_all_args: >-
+      {{ packages_yum_plugin_args }}
+      {{ packages_yum_nogpg_flag }}
+      -y
+      {{ packages_package_item.name }}
+    packages_yum_install_command: "yum install {{ packages_yum_all_args }}"
+    packages_yum_remove_command: "yum remove {{ packages_yum_all_args }}"
+    packages_yum_update_command: "yum update {{ packages_yum_all_args }}"
+    packages_yum_state_command_map:
+      present: "{{ packages_yum_install_command }}"
+      installed: "{{ packages_yum_install_command }}"
+      absent: "{{ packages_yum_remove_command }}"
+      removed: "{{ packages_yum_remove_command }}"
+      latest: >-
+        {{ packages_yum_install_command }} ;
+        {{ packages_yum_update_command }}
+  notify: "{{ packages_os_notify }}"
+  environment: "{{ packages_environment }}"
+  tags:
+    - role::packages
+    - role::packages::os
+    - role::packages::os::dlegacy

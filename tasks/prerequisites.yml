@@ -1,4 +1,5 @@
 ---
+
 - name: Setup proxy client
   ansible.builtin.include_role:
     name: amtega.proxy_client
