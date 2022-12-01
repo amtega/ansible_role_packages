@@ -1,10 +1,7 @@
 ---
+
 - name: Setup python packages
   block:
-    - name: Setup python
-      ansible.builtin.include_tasks: python.yml
-      when: ansible_facts.distribution_major_version is version("7", "<")
-
     - name: Determine python packages to be managed and setup virtualenv
       _packages:
         family: python
@@ -12,38 +9,37 @@
 
     - name: Setup python packages
       ansible.builtin.pip:
-        name: "{{ package.name }}"
-        state: "{{ package.state }}"
+        name: "{{ packages_package_item.name }}"
+        state: "{{ packages_package_item.state }}"
         virtualenv: >-
-          {{ package.virtualenv
+          {{ packages_package_item.virtualenv
              | default(packages_python_virtualenv)
              | default(omit) }}
         virtualenv_command: >-
-          {{ package.virtualenv_command
+          {{ packages_package_item.virtualenv_command
              | default(packages_python_virtualenv_command)
              | default("virtualenv") }}
         virtualenv_python: >-
-          {{ package.virtualenv_python
+          {{ packages_package_item.virtualenv_python
              | default(packages_python_virtualenv_python)
              | default(omit) }}
         virtualenv_site_packages: >-
-          {{ package.virtualenv_site_packages
+          {{ packages_package_item.virtualenv_site_packages
              | default(packages_python_virtualenv_site_packages)
              | default(omit) }}
         extra_args: >-
-          {{ package.extra_args
+          {{ packages_package_item.extra_args
              | default(packages_python_extra_args)
              | default(omit) }}
       register: packages_python_setup_result
       loop: "{{ packages_python_process_result.packages }}"
       loop_control:
-        loop_var: package
-        label: "{{ package.name }} {{ package.state }}"
+        loop_var: packages_package_item
+        label: >-
+          {{ packages_package_item.name }}
+          {{ packages_package_item.state }}
       notify: "{{ packages_python_notify }}"
-      environment:
-        LANGUAGE: en_US.utf8
-        LANG: en_US.utf8
-        LC_ALL: en_US.utf8
+      environment: "{{ packages_environment }}"
       vars:
         ansible_python_interpreter: >-
           {{ packages_python_process_result.python_interpreter }}

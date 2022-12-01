@@ -1,20 +1,22 @@
 ---
+
 - name: Setup operating system packages with yum
   ansible.builtin.yum:
     disable_plugin: "{{ packages_disable_plugin_value }}"
     disable_gpg_check: >-
-      {{ package.disable_gpg_check
+      {{ packages_package_item.disable_gpg_check
          | default(packages_disable_gpg_check)
          | default(omit) }}
     enable_plugin: "{{ packages_enable_plugin_value }}"
-    name: "{{ package.name }}"
-    state: "{{ package.state }}"
+    name: "{{ packages_package_item.name }}"
+    state: "{{ packages_package_item.state }}"
   register: packages_os_setup_result
   loop: "{{ packages_os_process_result.packages }}"
   loop_control:
-    loop_var: package
+    loop_var: packages_package_item
     label: >-
-      {{ package.name | default('') }} {{ package.state | default('') }}
+      {{ packages_package_item.name | default("") }}
+      {{ packages_package_item.state | default("") }}
   notify: "{{ packages_os_notify }}"
   environment: "{{ packages_environment }}"
   tags:
