@@ -1,13 +1,12 @@
 ---
-# Role tasks
 
 - name: Setup packages
   block:
-    - name: Setup prerequisites
-      ansible.builtin.include_tasks: prerequisites.yml
-
     - name: Gather facts
       ansible.builtin.include_tasks: facts.yml
+
+    - name: Setup prerequisites
+      ansible.builtin.include_tasks: prerequisites.yml
 
     - name: Setup operating system packages
       ansible.builtin.include_tasks: packages_os.yml

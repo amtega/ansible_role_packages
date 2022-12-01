@@ -2,5 +2,6 @@
 
 roles:
   - amtega.epel
+  - amtega.python
 
 collections: []

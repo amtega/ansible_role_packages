@@ -9,7 +9,9 @@ from ansible.plugins.filter.core import combine, to_json
 from ansible.plugins.test.core import version_compare
 from ansible.utils.display import Display
 import json
+import os
 import re
+import time
 
 
 class ActionModule(ActionBase):
@@ -63,6 +65,9 @@ class ActionModule(ActionBase):
     def _gather_role_vars(self):
         """Gather role vars"""
 
+        self.__ansible_python_interpreter = \
+            self._get_task_var("ansible_python_interpreter", None)
+
         self.__packages_debug = \
             self._get_task_var("packages_debug", False)
 
@@ -100,8 +105,8 @@ class ActionModule(ActionBase):
         self.__packages_python_extra_args = \
             self._get_task_var("packages_python_extra_args", None)
 
-        self.__packages_python_source_install_dir = \
-            self._get_task_var("packages_python_source_install_dir", None)
+        self.__packages_timeout = \
+            self._get_task_var("packages_timeout", 60)
 
     def _gather_facts(self):
         """Gather facts"""
@@ -133,7 +138,10 @@ class ActionModule(ActionBase):
         """Gather packages module"""
 
         if self.__distro_name in ["centos", "redhat"]:
-            self.__package_module = "yum"
+            if version_compare(self.__distro_version, "6", ">"):
+                self.__package_module = "yum"
+            else:
+                self.__package_module = "legacy"
         else:
             self.__package_module = "dnf"
 
@@ -185,23 +193,50 @@ class ActionModule(ActionBase):
 
     def _gather_os_packages(self):
         """Gather os packages"""
-
         self.__packages_os_present = list()
-
         self.__debug_info["packages_os_gathered"] = False
-        if "packages" not in self.__ansible_facts:
-            self.__debug_info["packages_os_gathered"] = True
-            result = self._execute_module(module_name="package_facts",
-                                          module_args=dict(),
-                                          task_vars=self.__task_vars)
 
-            self.__package_facts = result["ansible_facts"]["packages"]
+        if "_packages_os_present" not in self.__ansible_facts:
+            self.__debug_info["packages_os_gathered"] = True
+            self._task.async_val = self.__packages_timeout
+
+            cmd = "/usr/bin/rpm -qa --queryformat '%{NAME}\n'"
+            result = self._execute_module(
+                module_name="command",
+                module_args=dict(_raw_params=cmd, _uses_shell=False),
+                task_vars=self.__task_vars,
+                wrap_async=self.__packages_timeout)
+
+            self._task.async_val = 0
+
+            poll_args = {
+                "jid": result["ansible_job_id"],
+                "_async_dir": os.path.dirname(result["results_file"])}
+            poll_finished = False
+            poll_time = 0
+            poll_sleep = 0.5
+
+            while not poll_finished and poll_time < self.__packages_timeout:
+                poll_result = self._execute_module(
+                    module_name="async_status",
+                    module_args=poll_args,
+                    task_vars=self.__task_vars)
+
+                if poll_result.get("finished", 0) == 1:
+                    poll_finished = True
+
+                time.sleep(poll_sleep)
+                poll_time += poll_sleep
+
+            if "stdout_lines" not in poll_result:
+                raise AnsibleError("Cannot gather installed packages")
+
+            packages = poll_result["stdout_lines"]
         else:
-            self.__package_facts = self.__ansible_facts["packages"]
+            packages = self.__ansible_facts["_packages_os_present"]
 
         self.__packages_os_present = \
-            self.__packages_os_present \
-            + list(self.__package_facts.keys())
+            self.__packages_os_present + packages
 
         if self.__family == "os":
             self.__packages_present = self.__packages_os_present
@@ -416,7 +451,7 @@ class ActionModule(ActionBase):
         """Return struture for python os packages"""
 
         if self.__python_os_package is not None \
-           and self.__python_os_package not in self.__package_facts.keys():
+           and self.__python_os_package not in self.__packages_os_present:
             self.__python_os_packages = \
                 [dict(name=self.__python_os_package,
                       state="present")]
@@ -424,7 +459,7 @@ class ActionModule(ActionBase):
             self.__python_os_packages = list()
 
         if self.__pip_os_package is not None \
-           and self.__pip_os_package not in self.__package_facts.keys():
+           and self.__pip_os_package not in self.__packages_os_present:
             self.__python_os_packages = \
                 self.__python_os_packages \
                 + [dict(name=self.__pip_os_package,
@@ -432,14 +467,14 @@ class ActionModule(ActionBase):
 
         if self.__setup_tools_os_package is not None \
            and self.__setup_tools_os_package \
-                not in self.__package_facts.keys():
+                not in self.__packages_os_present:
             self.__python_os_packages = \
                 self.__python_os_packages \
                 + [dict(name=self.__setup_tools_os_package,
                         state="present")]
 
         if self.__virtualenv_os_package is not None \
-           and self.__virtualenv_os_package not in self.__package_facts.keys():
+           and self.__virtualenv_os_package not in self.__packages_os_present:
             self.__python_os_packages = \
                self.__python_os_packages \
                + [dict(name=self.__virtualenv_os_package,
@@ -558,9 +593,8 @@ class ActionModule(ActionBase):
             if self.__packages_python_virtualenv_python is not None:
                 python = self.__packages_python_virtualenv_python
             else:
-                if version_compare(self.__distro_version, "7", "<"):
-                    python = "{path}/bin/python3".format(
-                            path=self.__packages_python_source_install_dir)
+                if self.__ansible_python_interpreter is not None:
+                    python = self.__ansible_python_interpreter
                 else:
                     python = "/usr/bin/python3"
 
@@ -577,9 +611,10 @@ class ActionModule(ActionBase):
                 elif version_compare(self.__distro_version, "7", ">"):
                     virtualenv_cmd = "/usr/bin/virtualenv"
                 else:
-                    virtualenv_cmd = \
-                        self.__packages_python_source_install_dir \
-                        + "/bin/virtualenv"
+                    raise AnsibleError(
+                        "Cannot determine virtualenv command. "
+                        "Use variable packages_python_virtualenv_command to "
+                        "indicate one")
 
             cmd = "{virtualenv_cmd} " \
                   "--python={python} {args} {virtualenv}" \
@@ -593,8 +628,10 @@ class ActionModule(ActionBase):
                                             _uses_shell=False))
 
             task_vars = self.__task_vars.copy()
-            task_vars["ansible_python_interpreter"] = \
-                self.__packages_python_virtualenv_python
+
+            if self.__packages_python_virtualenv_python is not None:
+                task_vars["ansible_python_interpreter"] = \
+                    self.__packages_python_virtualenv_python
 
             result = action.run(task_vars=task_vars)
 
@@ -639,7 +676,6 @@ class ActionModule(ActionBase):
 
         try:
             self._gather()
-
             packages_to_manage = list()
 
             packages = self._get_packages_to_manage()
@@ -662,24 +698,25 @@ class ActionModule(ActionBase):
                         "extra_args",
                         self.__packages_python_extra_args)
 
-                package_dict = self._get_package_spec(name,
-                                                      state,
-                                                      virtualenv,
-                                                      virtualenv_command,
-                                                      virtualenv_python,
-                                                      virtualenv_site_packages,
-                                                      extra_args)
+                package_dict = self._get_package_spec(
+                    name,
+                    state,
+                    virtualenv,
+                    virtualenv_command,
+                    virtualenv_python,
+                    virtualenv_site_packages,
+                    extra_args)
 
                 if package_dict is not None:
                     packages_to_manage = packages_to_manage + [package_dict]
 
-            action_result = dict(changed=self.__changed,
-                                 packages=packages_to_manage)
+            action_result = dict(
+                changed=self.__changed, packages=packages_to_manage)
 
             ansible_facts = dict(
                 _packages_capabilities_present=self.__capabilities_present,
                 _packages_groups_present=self.__groups_present,
-                packages=self.__package_facts
+                _packages_os_present=self.__packages_os_present
             )
 
             if self.__family == "os":
@@ -721,7 +758,14 @@ class ActionModule(ActionBase):
                 action_result["debug"] = self.__debug_info
 
             action_result["ansible_facts"] = ansible_facts
-
+        except Exception as e:
+            msg = str(e)
+            if msg[0].islower:
+                glue = ": "
+            else:
+                glue = ". "
+            return dict(
+                failed=True, msg=f"Cannot gather packages info{glue}{msg}")
         finally:
             self._remove_tmp_path(self._connection._shell.tmpdir)
 
