@@ -593,8 +593,8 @@ class ActionModule(ActionBase):
             if self.__packages_python_virtualenv_python is not None:
                 python = self.__packages_python_virtualenv_python
             else:
-                if self.__ansible_python_interpreter is not None:
-                    python = self.__ansible_python_interpreter
+                if self.__packages_python_virtualenv_python is not None:
+                    python = self.__packages_python_virtualenv_python
                 else:
                     python = "/usr/bin/python3"
 
@@ -628,15 +628,22 @@ class ActionModule(ActionBase):
                                             _uses_shell=False))
 
             task_vars = self.__task_vars.copy()
-
-            if self.__packages_python_virtualenv_python is not None:
-                task_vars["ansible_python_interpreter"] = \
-                    self.__packages_python_virtualenv_python
-
+            task_vars["ansible_python_interpreter"] = python
             result = action.run(task_vars=task_vars)
 
             if result.get("failed", False):
-                raise AnsibleError("Failed to setup virtualenv")
+                module_stdout = result.get("module_stdout", "")
+                if len(module_stdout) > 0:
+                    if module_stdout[0].islower:
+                        glue = ": "
+                    else:
+                        glue = ". "
+
+                msg = "Failed to setup virtualenv"
+                if len(module_stdout) > 0:
+                    msg += f"{glue}{module_stdout}"
+
+                raise AnsibleError(msg)
 
             self.__debug_info["virtualenv_created"] = True
             self.__packages_virtualenv_exists = True
@@ -742,12 +749,6 @@ class ActionModule(ActionBase):
                 ansible_facts["packages_python_bin_dir"] = \
                     "{path}/bin/".format(
                                         path=self.__packages_python_virtualenv)
-
-                action = self._action(
-                    action="set_fact",
-                    args=dict(
-                        ansible_python_interpreter=self.__python_interpreter))
-                action.run(task_vars=self.__task_vars)
 
                 action_result["python_interpreter"] = self.__python_interpreter
 

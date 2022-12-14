@@ -128,8 +128,8 @@ packages_python_force: "{{ packages_force }}"
 
 # packages_python_extra_args:
 
-# By default the role installs the python packages into a virtualenv in order to
-# not overwrite the python packages installed by the operating system
+# The role installs the python packages into a virtualenv in order to not
+# overwrite the python packages installed by the operating system
 
 packages_python_virtualenv: /var/lib/ansible/venv
 # packages_python_virtualenv_command:
