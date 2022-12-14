@@ -110,6 +110,7 @@ provisioner:
         vars:
           python_build_install_dir: /opt/python
           ansible_python_interpreter: /opt/python/bin/python3
+          packages_python_virtualenv_python: /opt/python/bin/python3
           packages_python_virtualenv_command: /opt/python/bin/virtualenv
       molecule_hosts_fedora:
         vars:
