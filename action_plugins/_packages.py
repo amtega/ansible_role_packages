@@ -86,8 +86,8 @@ class ActionModule(ActionBase):
         self.__packages_distribution_aliases = \
             self._get_task_var("packages_distribution_aliases")
 
-        self.__packages_python_process_required = \
-            self._get_task_var("packages_python_process_required")
+        self.___packages_python_process_required = \
+            self._get_task_var("_packages_python_process_required")
 
         self.__packages_python_virtualenv = \
             self._get_task_var("packages_python_virtualenv", None)
@@ -166,8 +166,8 @@ class ActionModule(ActionBase):
         self.__packages_virtualenv_exists = \
             self.__ansible_facts.get("_packages_virtualenv_exists", None)
 
-        self.__packages_virtualenv_needs_upgrade = \
-            self.__ansible_facts.get("__packages_virtualenv_needs_upgrade",
+        self._packages_virtualenv_needs_upgrade = \
+            self.__ansible_facts.get("_packages_virtualenv_needs_upgrade",
                                      None)
 
         self.__packages_python_virtualenv_previous = \
@@ -376,9 +376,9 @@ class ActionModule(ActionBase):
 
             if len(virtualenv_status_major) > 0 \
                and version_compare(virtualenv_status_major, "3", "<"):
-                self.__packages_virtualenv_needs_upgrade = True
+                self._packages_virtualenv_needs_upgrade = True
             else:
-                self.__packages_virtualenv_needs_upgrade = False
+                self._packages_virtualenv_needs_upgrade = False
 
     def _normalize_structure(self, structure):
         """Return a normalized packages structure"""
@@ -527,7 +527,7 @@ class ActionModule(ActionBase):
                             [json.loads(to_json(self.__packages_to_manage))]
                             + self.__packages_to_manage_hostvars)
 
-        if self.__packages_python_process_required \
+        if self.___packages_python_process_required \
            and self.__family == "os":
             packages_spec = self._combine_structures(
                                 [json.loads(to_json(packages_spec))]
@@ -575,9 +575,9 @@ class ActionModule(ActionBase):
         self.__debug_info["virtualenv_created"] = False
         if self.__family == "python" \
            and (not self.__packages_virtualenv_exists
-                or self.__packages_virtualenv_needs_upgrade):
+                or self._packages_virtualenv_needs_upgrade):
 
-            if self.__packages_virtualenv_needs_upgrade:
+            if self._packages_virtualenv_needs_upgrade:
                 result = self._execute_module(
                         module_name="file",
                         module_args=dict(
@@ -588,7 +588,7 @@ class ActionModule(ActionBase):
                 if result.get("failed", False):
                     raise AnsibleError("Failed to remove virtualenv")
 
-                self.__packages_virtualenv_needs_upgrade = False
+                self._packages_virtualenv_needs_upgrade = False
 
             if self.__packages_python_virtualenv_python is not None:
                 python = self.__packages_python_virtualenv_python
@@ -740,8 +740,8 @@ class ActionModule(ActionBase):
                     self.__packages_python_present
                 ansible_facts["_packages_virtualenv_exists"] = \
                     self.__packages_virtualenv_exists
-                ansible_facts["__packages_virtualenv_needs_upgrade"] = \
-                    self.__packages_virtualenv_needs_upgrade
+                ansible_facts["_packages_virtualenv_needs_upgrade"] = \
+                    self._packages_virtualenv_needs_upgrade
                 ansible_facts["_packages_python_virtualenv"] = \
                     self.__packages_python_virtualenv
                 ansible_facts["packages_python_virtualenv_dir"] = \

@@ -6,3 +6,37 @@
   tags:
     - role::packages
     - role::packages::facts
+
+- name: Setup facts with exclusion patterns
+  ansible.builtin.set_fact:
+    _packages_os_exclude_pattern: >-
+      {{ "^packages_os_("
+          + "load_from_hostvars"
+          + packages_pipe
+          + "process_result"
+          + packages_pipe
+          + "setup_result"
+          + packages_pipe
+          + "result)$" }}
+
+    _packages_python_exclude_pattern: >-
+      {{ "^packages_python_("
+          + "load_from_hostvars"
+          + packages_pipe
+          + "virtualenv"
+          + packages_pipe
+          + "extra_args"
+          + packages_pipe
+          + "set_ansible_interpreter"
+          + packages_pipe
+          + "bin_dir"
+          + packages_pipe
+          + "process_result"
+          + packages_pipe
+          + "setup_result"
+          + packages_pipe
+          + "source_binary_check_result"
+          + packages_pipe
+          + "result).*$" }}
+  vars:
+    packages_pipe: "|"
