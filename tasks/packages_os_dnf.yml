@@ -2,12 +2,12 @@
 
 - name: Setup operating system packages with dnf
   ansible.builtin.dnf:
-    disable_plugin: "{{ packages_disable_plugin_value }}"
+    disable_plugin: "{{ _packages_disable_plugin_value | default(omit) }}"
     disable_gpg_check: >-
       {{ packages_package_item.disable_gpg_check
          | default(packages_disable_gpg_check)
          | default(omit) }}
-    enable_plugin: "{{ packages_enable_plugin_value }}"
+    enable_plugin: "{{ _packages_enable_plugin_value | default(omit) }}"
     name: "{{ packages_package_item.name }}"
     state: "{{ packages_package_item.state }}"
   register: packages_os_setup_result
@@ -18,7 +18,7 @@
       {{ packages_package_item.name | default("") }}
       {{ packages_package_item.state | default("") }}
   notify: "{{ packages_os_notify }}"
-  environment: "{{ packages_environment }}"
+  environment: "{{ _packages_environment }}"
   tags:
     - role::packages
     - role::packages::os

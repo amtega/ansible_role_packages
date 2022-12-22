@@ -13,7 +13,7 @@
   vars:
     select_hostvars_query:
       pattern: ^packages_os_.*
-      exclude_pattern: "{{ packages_os_exclude_pattern }}"
+      exclude_pattern: "{{ _packages_os_exclude_pattern }}"
       fact_name: packages_os_hostvars
       output_type: list
 
@@ -24,6 +24,42 @@
   vars:
     select_hostvars_query:
       pattern: ^packages_python_.*
-      exclude_pattern: "{{ packages_python_exclude_pattern }}"
+      exclude_pattern: "{{ _packages_python_exclude_pattern }}"
       fact_name: packages_python_hostvars
       output_type: list
+
+- name: Setup internal facts
+  ansible.builtin.set_fact:
+    _packages_os_process_required: >-
+      {{ packages_os.keys() | list | length > 0
+        or packages_os_hostvars | default([]) | length > 0
+        or _packages_python_process_required
+        or packages_os_force | bool }}
+
+    _packages_python_process_required: >-
+      {{ packages_python.keys() | list | length > 0
+        or packages_python_hostvars | default([]) | length > 0
+        or packages_python_force | bool }}
+
+    _packages_disable_plugin_value: >-
+      {{ (packages_disable_plugins is undefined
+          or packages_disable_plugins | length == 0)
+          | ternary(omit, packages_disable_plugins | join(',')) }}
+
+    _packages_enable_plugin_value: >-
+      {{ (packages_enable_plugins is undefined
+          or packages_enable_plugins | length == 0)
+          | ternary(omit, packages_enable_plugins | join(',')) }}
+
+    _packages_environment: >-
+      {{ proxy_client_environment | default({})
+         | combine(packages_tmp_dir_environment)
+         | combine(packages_lang_environment) }}
+  vars:
+    packages_lang_environment:
+      LANGUAGE: en_US.utf8
+      LANG: en_US.utf8
+      LC_ALL: en_US.utf8
+
+    packages_tmp_dir_environment:
+      TMPDIR: "{{ packages_tmp_dir }}"
