@@ -16,8 +16,8 @@
       {{ packages_package_item.state | default("") }}
   vars:
     packages_yum_plugin_args: >-
-      --disableplugin="{{ packages_disable_plugin_value }}"
-      --enableplugin="{{ packages_enable_plugin_value }}"
+      --disableplugin="{{ _packages_disable_plugin_value | default(omit) }}"
+      --enableplugin="{{ _packages_enable_plugin_value | default(omit) }}"
     packages_yum_nogpg_flag: >-
       {{ (packages_package_item.disable_gpg_chece
           | default(packages_disable_gpg_check)
@@ -40,7 +40,7 @@
         {{ packages_yum_install_command }} ;
         {{ packages_yum_update_command }}
   notify: "{{ packages_os_notify }}"
-  environment: "{{ packages_environment }}"
+  environment: "{{ _packages_environment }}"
   tags:
     - role::packages
     - role::packages::os

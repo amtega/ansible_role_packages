@@ -39,7 +39,7 @@
           {{ packages_package_item.name }}
           {{ packages_package_item.state }}
       notify: "{{ packages_python_notify }}"
-      environment: "{{ packages_environment }}"
+      environment: "{{ _packages_environment }}"
       vars:
         ansible_python_interpreter: >-
           {{ packages_python_process_result.python_interpreter }}
@@ -55,6 +55,6 @@
         packages_python_result: >-
           {{ packages_python_setup_result | default({}) }}
       when: packages_python_process_result.packages | length > 0
-  environment: "{{ packages_environment }}"
+  environment: "{{ _packages_environment }}"
   tags:
     - role::packages::python
