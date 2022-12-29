@@ -2,12 +2,17 @@
 
 - name: Gather facts
   ansible.builtin.setup:
+    gather_subset:
+      - distribution
+      - distribution_major_version
+      - python
+      - python_version
   when: ansible_facts.python_version is not defined
   tags:
     - role::packages
     - role::packages::facts
 
-- name: Setup facts with exclusion patterns
+- name: Setup facts with exclusion patterns for hostvars loading
   ansible.builtin.set_fact:
     _packages_os_exclude_pattern: >-
       {{ "^packages_os_("

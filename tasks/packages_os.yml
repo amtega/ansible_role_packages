@@ -11,7 +11,44 @@
 
     - name: Determine operating system packages to be managed
       _packages:
+        ansible_python_interpreter: >-
+          {{ ansible_python_interpreter | default(omit) }}
         family: os
+        distribution_name: "{{ ansible_facts.distribution | lower }}"
+        distribution_version: "{{ ansible_facts.distribution_major_version }}"
+        distribution_aliases: "{{ packages_distribution_aliases }}"
+        packages_os:  "{{ packages_os }}"
+        packages_os_hostvars: "{{ packages_os_hostvars }}"
+        packages_os_present: "{{ _packages_os_present | default(omit) }}"
+        packages_os_managed: "{{ _packages_os_managed | default(omit) }}"
+        packages_capabilities_present: >-
+          {{ _packages_capabilities_present | default(omit) }}
+        packages_groups_present: >-
+          {{ _packages_groups_present | default(omit) }}
+        packages_python: "{{ packages_python }}"
+        packages_python_hostvars: "{{ packages_python_hostvars }}"
+        packages_python_present: >-
+          {{ _packages_python_present | default(omit) }}
+        packages_python_managed: >-
+          {{ _packages_python_managed | default(omit) }}
+        python_process_required: "{{ _packages_python_process_required }}"
+        python_version: "{{ ansible_facts.python.version.major }}"
+        python_virtualenv: "{{ packages_python_virtualenv }}"
+        python_virtualenv_command: >-
+          {{ packages_python_virtualenv_command | default(omit) }}
+        python_virtualenv_python: >-
+          {{ packages_python_virtualenv_python | default(omit) }}
+        python_virtualenv_site_packages: >-
+          {{ packages_python_virtualenv_site_packages | bool }}
+        python_virtualenv_exists: >-
+          {{ _packages_python_virtualenv_exists | default(omit) }}
+        python_virtualenv_needs_upgrade: >-
+          {{ _packages_python_virtualenv_needs_upgrade | default(omit) }}
+        python_previous_virtualenv: >-
+          {{ _packages_python_virtualenv | default(omit) }}
+        python_extra_args: "{{ packages_python_extra_args | default(omit) }}"
+        timeout: "{{ packages_timeout }}"
+        debug: "{{ packages_debug }}"
       register: packages_os_process_result
 
     - ansible.builtin.include_tasks: >-
