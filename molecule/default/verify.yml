@@ -20,9 +20,8 @@
       when: ansible_facts.distribution_major_version is version("7", "<")
       block:
         - name: Get operating system packages facts using legacy command
+          # noqa command-instead-of-module
           ansible.builtin.command: /bin/rpm -qa --queryformat="%{NAME}\n"
-          args:
-            warn: no
           changed_when: no
           register: legacy_packages_result
 
@@ -59,11 +58,10 @@
       when: ansible_facts.distribution_major_version is version("34", "==")
       register: pip_venv_result
 
-    - name: Check python packages
+    - name: Check python pexpect package
       ansible.builtin.assert:
         that:
           - pip_output is search("pexpect")
-
           - >-
             ansible_facts.distribution_major_version is version("7", "!=")
             or (ansible_facts.distribution_major_version is version("7", "==")
@@ -73,6 +71,10 @@
           {{ (ansible_facts.distribution_major_version is version("34", "=="))
              | ternary(pip_venv_result.stdout | default(""),
                        pip_result.stdout) }}
+
+    - name: Check python gitlab package
+      ansible.builtin.assert:
+        that: pip_result.stdout is search("python-gitlab")
 
     - name: Check facts
       ansible.builtin.assert:
@@ -92,7 +94,7 @@
             or ansible_facts.distribution_major_version is version("7", "<")
           - ansible_facts["_packages_python_managed"] | length > 0
           - ansible_facts["_packages_python_present"] | length > 0
-          - ansible_facts["_packages_virtualenv_exists"]
+          - ansible_facts["_packages_python_virtualenv_exists"]
           - ansible_python_interpreter == "/var/lib/ansible/venv/bin/python"
           - >-
             ansible_facts["packages_python_virtualenv_dir"]
@@ -110,9 +112,10 @@
     - name: Check caching stuff
       ansible.builtin.assert:
         that:
-          - not packages_os_process_result.debug.facts_gathered
-          - not packages_os_process_result.debug.packages_os_gathered
-          - not packages_os_process_result.debug.capabilites_gathered
-          - not packages_os_process_result.debug.groups_gathered
-          - not packages_python_process_result.debug.packages_python_gathered
-          - not packages_python_process_result.debug.virtualenv_created
+          - not packages_os_process_result.debug_info.packages_os_gathered
+          - not packages_os_process_result.debug_info.capabilites_gathered
+          - not packages_os_process_result.debug_info.groups_gathered
+          - >-
+            not packages_python_process_result.debug_info
+            .packages_python_gathered
+          - not packages_python_process_result.debug_info.virtualenv_created

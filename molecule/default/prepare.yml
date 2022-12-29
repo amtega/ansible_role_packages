@@ -1,7 +1,9 @@
 ---
 
-- name: Prepare EL 6 containers
-  hosts: molecule_hosts_centos_6
+- name: Prepare EL 6/7 containers
+  hosts:
+    - molecule_hosts_centos_6
+    - molecule_hosts_centos_7
   gather_facts: no
   roles:
     - amtega.python
