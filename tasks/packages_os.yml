@@ -10,7 +10,7 @@
         - ansible_local.epel is undefined
 
     - name: Determine operating system packages to be managed
-      _packages:
+      process:
         ansible_python_interpreter: >-
           {{ ansible_python_interpreter | default(omit) }}
         family: os
@@ -18,7 +18,7 @@
         distribution_version: "{{ ansible_facts.distribution_major_version }}"
         distribution_aliases: "{{ packages_distribution_aliases }}"
         packages_os:  "{{ packages_os }}"
-        packages_os_hostvars: "{{ packages_os_hostvars }}"
+        packages_os_hostvars: "{{ packages_os_hostvars | default([]) }}"
         packages_os_present: "{{ _packages_os_present | default(omit) }}"
         packages_os_managed: "{{ _packages_os_managed | default(omit) }}"
         packages_capabilities_present: >-
@@ -26,7 +26,7 @@
         packages_groups_present: >-
           {{ _packages_groups_present | default(omit) }}
         packages_python: "{{ packages_python }}"
-        packages_python_hostvars: "{{ packages_python_hostvars }}"
+        packages_python_hostvars: "{{ packages_python_hostvars | default([]) }}"
         packages_python_present: >-
           {{ _packages_python_present | default(omit) }}
         packages_python_managed: >-
