@@ -133,7 +133,7 @@ packages_python_force: "{{ packages_force }}"
 
 packages_python_virtualenv: /var/lib/ansible/venv
 # packages_python_virtualenv_command:
-# packages_python_virtualenv_python:
+packages_python_virtualenv_python: /usr/bin/python3
 packages_python_virtualenv_site_packages: yes
 
 # Indicate if `ansible_python_interpreter` must be pointed by the role to the
@@ -200,3 +200,7 @@ packages_force: no
 # Timeout for info gathering. This avoids buggy hosts block playbook
 
 packages_timeout: 60
+
+# Debug role
+
+packages_debug: no

@@ -4,8 +4,6 @@
   # noqa command-instead-of-shell
   ansible.builtin.shell: >-
     {{ packages_yum_state_command_map[packages_package_item.state] }}
-  args:
-    warn: no
   register: packages_os_setup_result
   changed_when: packages_os_setup_result.stdout is search("Running transaction")
   loop: "{{ packages_os_process_result.packages }}"

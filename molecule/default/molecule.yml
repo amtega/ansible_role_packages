@@ -101,6 +101,9 @@ provisioner:
               all:
                 lynx: present
           packages_python_extra:
+            all:
+              all:
+                python-gitlab: present
             centos:
               7:
                 lxml: present
