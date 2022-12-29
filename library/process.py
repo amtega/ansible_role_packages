@@ -107,63 +107,63 @@ class PackagesManager:
             self.__virtualenv_os_package = "python3-virtualenv"
             self.__setup_tools_os_package = "python3-setuptools"
             self.__rpm_command = "/usr/bin/rpm"
+            self.__grep_command = "/usr/bin/grep"
+            self.__sort_command = "/usr/bin/sort"
         else:
             self.__python_os_package = None
             self.__pip_os_package = None
             self.__virtualenv_os_package = None
             self.__setup_tools_os_package = None
             self.__rpm_command = "/bin/rpm"
+            self.__grep_command = "/bin/grep"
+            self.__sort_command = "/bin/sort"
 
-    def _run(self, cmd1, cmd2=None, shell=False, env={}):
-        """Run command"""
+    def _run(self, cmds=[], shell=False, env={}):
+        """Run piplined commands"""
         try:
-            subprocess.TimeoutExpired(cmd1, self.__timeout)
+            subprocess.TimeoutExpired(cmds[0], self.__timeout)
             timeout_supported = True
-        except NameError:
+        except Exception:
             timeout_supported = False
 
-        proc1 = subprocess.Popen(
-            cmd1,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=shell,
-            env=env,
-            universal_newlines=True)
+        procs = list()
 
-        if proc1.returncode not in [0, None]:
-            raise Exception("Error running command " + " ".join(cmd1))
-
-        proc = proc1
-
-        if cmd2 is not None:
-            proc2 = subprocess.Popen(
-                cmd2,
-                stdin=proc1.stdout,
+        for i, cmd in enumerate(cmds):
+            args = dict(
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=shell,
                 env=env,
                 universal_newlines=True)
+            if i > 0:
+                args["stdin"] = procs[i-1].stdout
 
-            if proc2.returncode not in [0, None]:
-                raise Exception("Error running command " + " ".join(cmd2))
-            proc = proc2
+            proc = subprocess.Popen(cmd, **args)
+            procs.append(proc)
+
+            if proc.returncode not in [0, None]:
+                raise Exception("Error running command " + str(cmd))
+
+        proc = procs[-1]
 
         if not timeout_supported:
-            return (proc.stdout, proc.stderr)
+            stdout = proc.stdout
+            stderr = proc.stderr
+        else:
+            try:
+                stdout, stderr = proc.communicate(timeout=self.__timeout)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.communicate()
+                raise Exception("Timeout running " + proc.args)
 
-        try:
-            stdout, stderr = proc.communicate(timeout=self.__timeout)
-            return (stdout, stderr)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            stdout, stderr = proc.communicate()
+        if not isinstance(stdout, str):
+            stdout = "\n".join(stdout.readlines())
 
-            if cmd2 is None:
-                msg = "command " + " ".join(cmd1)
-            else:
-                msg = "commands " + " ".join(cmd1) + " and " + " ".join(cmd2)
-            raise Exception("Timeout running " + msg)
+        if not isinstance(stderr, str):
+            stderr = "\n".join(stderr.readlines())
+
+        return (stdout, stderr)
 
     def _gather_os_packages(self):
         """Gather os packages"""
@@ -173,7 +173,7 @@ class PackagesManager:
             cmd = [self.__rpm_command, "-qa", "--queryformat", "%{NAME}\n"]
 
             try:
-                stdout, stderr = self._run(cmd)
+                stdout, stderr = self._run([cmd])
             except Exception:
                 raise Exception("Cannot gather installed packages")
             self.__packages_os_present = stdout.splitlines()
@@ -189,8 +189,11 @@ class PackagesManager:
             self.__debug_info["capabilites_gathered"] = True
             cmd1 = [self.__rpm_command, "-qa", "--provides"]
             cmd2 = ["/usr/bin/cut", "-d", "=", "-f", "1"]
+            cmd3 = [self.__grep_command, "-v", "("]
+            cmd4 = [self.__sort_command]
+            cmd5 = ["/usr/bin/uniq"]
             try:
-                stdout, stderr = self._run(cmd1, cmd2)
+                stdout, stderr = self._run([cmd1, cmd2, cmd3, cmd4, cmd5])
             except Exception:
                 raise Exception("Cannot gather installed capabilites")
             self.__packages_capabilities_present = \
@@ -212,7 +215,7 @@ class PackagesManager:
                 cmd = "/usr/bin/yum group list"
                 try:
                     env = {"LANGUAGE": "en_US"}
-                    stdout, stderr = self._run(cmd, shell=True, env=env)
+                    stdout, stderr = self._run([cmd], shell=True, env=env)
                 except Exception:
                     raise Exception("Cannot gather installed groups")
 
@@ -261,7 +264,7 @@ class PackagesManager:
             cmd1 = [packages_pip_dir + "pip", "list"]
             cmd2 = ["/usr/bin/awk", "{ print $1 };"]
             try:
-                stdout, stderr = self._run(cmd1, cmd2)
+                stdout, stderr = self._run([cmd1, cmd2])
             except Exception:
                 raise Exception("Cannot gather installed python packages")
 
@@ -280,7 +283,7 @@ class PackagesManager:
                 "'from sys import version_info ; print(version_info[0])'"
             ]
             try:
-                stdout, stderr = self._run(cmd)
+                stdout, stderr = self._run([cmd])
                 if len(stderr) == 0:
                     self.__python_virtualenv_exists = True
 
@@ -520,7 +523,7 @@ class PackagesManager:
                 self.__python_virtualenv
             ]
             try:
-                stdout, stderr = self._run(cmd)
+                stdout, stderr = self._run([cmd])
             except Exception:
                 if len(stdout) > 0:
                     if stdout[0].islower:
