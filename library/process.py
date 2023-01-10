@@ -9,6 +9,7 @@ from traceback import format_exc
 import json
 import re
 import subprocess
+import time
 
 
 class PackagesManager:
@@ -119,7 +120,7 @@ class PackagesManager:
             self.__sort_command = "/bin/sort"
 
     def _run(self, cmds=[], shell=False, env={}):
-        """Run piplined commands"""
+        """Run pipelined commands"""
         try:
             subprocess.TimeoutExpired(cmds[0], self.__timeout)
             timeout_supported = True
@@ -127,6 +128,7 @@ class PackagesManager:
             timeout_supported = False
 
         procs = list()
+        start_time = time.time()
 
         for i, cmd in enumerate(cmds):
             args = dict(
@@ -147,6 +149,10 @@ class PackagesManager:
         proc = procs[-1]
 
         if not timeout_supported:
+            while self.__timeout and proc.poll() is None:
+                if time.time()-start_time >= self.__timeout:
+                    proc.kill()
+                    raise Exception("Timeout running " + cmds[-1])
             stdout = proc.stdout
             stderr = proc.stderr
         else:
