@@ -199,7 +199,7 @@ packages_force: no
 
 # Timeout for info gathering. This avoids buggy hosts block playbook
 
-packages_timeout: 60
+packages_timeout: 120
 
 # Debug role
 
