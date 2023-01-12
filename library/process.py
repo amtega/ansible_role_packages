@@ -14,6 +14,7 @@ import time
 
 class PackagesManager:
     def __init__(self,
+                 module,
                  ansible_python_interpreter,
                  distribution_name,
                  distribution_version,
@@ -41,6 +42,7 @@ class PackagesManager:
                  python_extra_args,
                  timeout,
                  debug):
+        self.__module = module
         self.__ansible_python_interpreter = ansible_python_interpreter
         self.__distribution_name = distribution_name
         self.__distribution_version = distribution_version
@@ -181,7 +183,9 @@ class PackagesManager:
             try:
                 stdout, stderr = self._run([cmd])
             except Exception:
-                raise Exception("Cannot gather installed packages")
+                self.__module.warn("Cannot gather installed packages")
+                stdout = ""
+
             self.__packages_os_present = stdout.splitlines()
 
         if self.__family == "os":
@@ -201,7 +205,9 @@ class PackagesManager:
             try:
                 stdout, stderr = self._run([cmd1, cmd2, cmd3, cmd4, cmd5])
             except Exception:
-                raise Exception("Cannot gather installed capabilites")
+                self.__module.warn("Cannot gather installed capabilites")
+                stdout = ""
+
             self.__packages_capabilities_present = \
                 list((p.strip() for p in stdout.splitlines()))
 
@@ -223,7 +229,8 @@ class PackagesManager:
                     env = {"LANGUAGE": "en_US"}
                     stdout, stderr = self._run([cmd], shell=True, env=env)
                 except Exception:
-                    raise Exception("Cannot gather installed groups")
+                    self.__module.warn("Cannot gather installed groups")
+                    stdout = ""
 
                 lines = stdout.splitlines()
 
@@ -272,7 +279,8 @@ class PackagesManager:
             try:
                 stdout, stderr = self._run([cmd1, cmd2])
             except Exception:
-                raise Exception("Cannot gather installed python packages")
+                self.__module.warn("Cannot gather installed python packages")
+                stdout = ""
 
             self.__packages_python_present = \
                 list((p.strip() for p in stdout.splitlines()[2:]))
@@ -713,6 +721,7 @@ def main():
         debug = module.params["debug"]
 
         pm = PackagesManager(
+            module,
             ansible_python_interpreter,
             distribution_name,
             distribution_version,
