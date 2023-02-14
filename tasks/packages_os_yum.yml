@@ -17,6 +17,8 @@
     label: >-
       {{ packages_package_item.name | default("") }}
       {{ packages_package_item.state | default("") }}
+  async: "{{ packages_timeout }}"
+  poll: "{{ packages_poll }}"
   notify: "{{ packages_os_notify }}"
   environment: "{{ _packages_environment }}"
   tags:

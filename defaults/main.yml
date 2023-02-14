@@ -197,9 +197,14 @@ packages_tmp_dir: /tmp
 
 packages_force: no
 
-# Timeout for info gathering. This avoids buggy hosts block playbook
+# Timeout for info gathering and install tasks. This avoids buggy hosts lock
+# playbook
 
 packages_timeout: 120
+
+# Poll time for install tasks
+
+packages_poll: 3
 
 # Debug role
 
