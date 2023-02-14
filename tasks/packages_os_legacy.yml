@@ -37,6 +37,8 @@
       latest: >-
         {{ packages_yum_install_command }} ;
         {{ packages_yum_update_command }}
+  async: "{{ packages_timeout }}"
+  poll: "{{ packages_poll }}"
   notify: "{{ packages_os_notify }}"
   environment: "{{ _packages_environment }}"
   tags:
