@@ -107,7 +107,12 @@ class PackagesManager:
         if int(self.__distribution_version) >= 7:
             self.__python_os_package = "python3"
             self.__pip_os_package = "python3-pip"
-            self.__virtualenv_os_package = "python3-virtualenv"
+
+            if self.__python_virtualenv_command is not None:
+                self.__virtualenv_os_package = None
+            else:
+                self.__virtualenv_os_package = "python3-virtualenv"
+
             self.__setup_tools_os_package = "python3-setuptools"
             self.__rpm_command = "/usr/bin/rpm"
             self.__grep_command = "/usr/bin/grep"
