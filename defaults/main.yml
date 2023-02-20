@@ -209,3 +209,7 @@ packages_poll: 3
 # Debug role
 
 packages_debug: no
+
+# Enable or disable the role
+
+packages_enabled: yes
