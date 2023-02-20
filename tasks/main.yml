@@ -19,5 +19,6 @@
       when: _packages_python_process_required
       tags:
         - role::packages::python
+  when: packages_enabled | bool
   tags:
     - role::packages
